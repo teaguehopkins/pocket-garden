@@ -1,0 +1,155 @@
+<title>Drift Circuit</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oxanium:wght@500;700&family=IBM+Plex+Sans:wght@400;600&display=swap">
+<style>
+/* Layout: one-column cockpit. Track strip on top, gauges, then the hand. Deliberately single dark theme. */
+:root{--bg:#0a0e19;--panel:#131a2c;--line:#25304b;--fg:#e7ecf6;--dim:#8792ad;--accent:#ffb347;--cool:#5fd3ff;--hot:#ff5d6c;--good:#7ee08a;
+--disp:'Oxanium',system-ui,sans-serif;--body:'IBM Plex Sans',system-ui,sans-serif;color-scheme:dark}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px}
+#app{max-width:520px;margin:0 auto;padding-block:12px 32px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:14px}
+h1{font-family:var(--disp);font-size:22px;letter-spacing:.06em;margin:0;text-transform:uppercase}
+h2{font-family:var(--disp);font-size:17px;margin:0;letter-spacing:.04em}
+.top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.dim{color:var(--dim);font-size:13px}
+.track{display:grid;grid-template-columns:repeat(8,1fr);gap:4px}
+.seg{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 2px;text-align:center;font-size:11px;color:var(--dim)}
+.seg b{display:block;font-size:18px;font-family:var(--disp);color:var(--fg)}
+.seg.now{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.seg.past{opacity:.35}
+.hz-asteroid b{color:var(--hot)}.hz-gravity b{color:var(--cool)}.hz-flare b{color:var(--accent)}
+.bars{display:flex;flex-direction:column;gap:6px}
+.bar{display:grid;grid-template-columns:56px 1fr 44px;align-items:center;gap:8px;font-size:13px}
+.bar .t{height:10px;background:var(--panel);border-radius:5px;overflow:hidden}
+.bar .t i{display:block;height:100%;background:var(--accent);transition:width .3s}
+.bar.ghost .t i{background:var(--dim)}
+.bar span:last-child{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--disp)}
+.gauges{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.g{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.g .lab{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+.g .v{font-family:var(--disp);font-size:22px}
+.pips{display:flex;gap:3px;margin-top:4px}.pips i{flex:1;height:8px;border-radius:2px;background:var(--line)}
+.pips i.on{background:var(--hot)}
+.hazard{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:14px}
+.hand{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.card{font:inherit;color:var(--fg);text-align:left;background:linear-gradient(180deg,#1b2440,#141a2c);border:1px solid var(--line);border-radius:10px;padding:8px;min-height:104px;display:flex;flex-direction:column;gap:4px;cursor:pointer}
+.card:disabled{opacity:.35;cursor:default}
+.card:focus-visible,.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.card .nm{font-family:var(--disp);font-weight:700;font-size:14px;display:flex;justify-content:space-between;gap:4px}
+.card .cost{color:var(--accent)}
+.card .tx{font-size:12px;color:var(--dim);line-height:1.3}
+.btn{font:inherit;font-family:var(--disp);font-weight:700;letter-spacing:.05em;text-transform:uppercase;background:var(--accent);color:#1a1205;border:0;border-radius:10px;padding:14px;cursor:pointer;font-size:15px}
+.btn.ghost{background:transparent;color:var(--fg);border:1px solid var(--line)}
+.row{display:flex;gap:8px;flex-wrap:wrap}.row .btn{flex:1}
+.log{font-size:13px;color:var(--dim);min-height:1.4em}
+.part{font:inherit;color:var(--fg);text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;cursor:pointer;display:flex;flex-direction:column;gap:4px}
+.part:hover{border-color:var(--accent)}
+.part b{font-family:var(--disp);font-size:16px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}.chip{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:3px 8px;color:var(--dim)}
+.big{font-family:var(--disp);font-size:44px;line-height:1}
+.medal-gold{color:var(--accent)}.medal-silver{color:#c9d3e6}.medal-bronze{color:#d08b5b}
+p{margin:0;line-height:1.45}
+</style>
+<div id="app"></div>
+<script>
+const CARDS={
+ thrust:{n:'Thrust',c:1,t:'+2 distance, +1 heat'},
+ burn:{n:'Afterburner',c:2,t:'+5 distance, +3 heat'},
+ shield:{n:'Deflector',c:1,t:'Block asteroid damage this turn'},
+ sling:{n:'Slingshot',c:1,t:'+1 distance. +4 in a gravity well'},
+ cool:{n:'Coolant',c:0,t:'-2 heat'},
+ sail:{n:'Solar Sail',c:0,t:'+1 distance. +3 in a solar flare'},
+ over:{n:'Overclock',c:0,t:'+2 energy, +2 heat'},
+ scan:{n:'Scanner',c:0,t:'Draw 2 cards'},
+ drift:{n:'Drift',c:1,t:'+1 distance per card played this turn (incl. this)'}
+};
+const PARTS={
+ ion:{n:'Ion Drive',d:'Adds Afterburner + Thrust',add:['burn','thrust']},
+ keel:{n:'Gravity Keel',d:'Adds 2 Slingshot',add:['sling','sling']},
+ solar:{n:'Solar Array',d:'Adds 2 Solar Sail',add:['sail','sail']},
+ sink:{n:'Heat Sink',d:'Adds Coolant. Passive: -1 heat every turn',add:['cool'],p:'sink'},
+ core:{n:'Reactor Core',d:'Passive: +1 energy every turn',add:[],p:'core'},
+ hull:{n:'Armored Hull',d:'Passive: asteroids cost 1 instead of 3',add:[],p:'hull'},
+ tune:{n:'Tuning Bay',d:'Adds Overclock + Scanner',add:['over','scan']},
+ fins:{n:'Drift Fins',d:'Adds 2 Drift',add:['drift','drift']},
+ bay:{n:'Wide Cargo Bay',d:'Passive: draw 1 extra card',add:[],p:'bay'}
+};
+const HZ={clear:{n:'Open space',g:'·',d:'No effect.'},asteroid:{n:'Asteroids',g:'◆',d:'Lose 3 distance unless you play a Deflector.'},gravity:{n:'Gravity well',g:'◎',d:'Lose 1 distance unless you Slingshot. Slingshots give +4.'},flare:{n:'Solar flare',g:'✺',d:'+2 heat at end of turn. Solar Sails give +3.'}};
+const START=['thrust','thrust','thrust','thrust','cool','cool','shield','shield','sling','sail'];
+const TURNS=8,MAXHEAT=7,MEDALS=[['gold',44],['silver',36],['bronze',28]];
+function rng(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const today=()=>{const d=new Date();return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate()};
+const store={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+let S;const app=document.getElementById('app');
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(S.R()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function newRun(seed){
+ const R=rng(seed);
+ const hz=['clear'];const pool=['clear','asteroid','asteroid','gravity','gravity','flare','flare'];
+ for(let i=1;i<TURNS;i++)hz.push(pool[Math.floor(R()*pool.length)]);
+ const ghost=[];let g=0;for(let i=0;i<TURNS;i++){g+=3+Math.floor(R()*3);ghost.push(g)}
+ S={seed,R,daily:seed===today(),phase:'draft',round:0,parts:[],passive:{},deck:[...START],track:hz,ghost,dist:0,heat:0,turn:0,log:''};
+ offer();render();
+}
+function offer(){const keys=Object.keys(PARTS).filter(k=>!S.parts.includes(k));shuffle(keys);S.offer=keys.slice(0,3)}
+function pick(k){S.parts.push(k);const p=PARTS[k];S.deck.push(...p.add);if(p.p)S.passive[p.p]=1;S.round++;if(S.round<4)offer();else startRace();render()}
+function startRace(){S.phase='race';S.draw=shuffle([...S.deck]);S.disc=[];S.hand=[];beginTurn()}
+function draw(n){for(let i=0;i<n;i++){if(!S.draw.length){if(!S.disc.length)return;S.draw=shuffle(S.disc);S.disc=[]}S.hand.push(S.draw.pop())}}
+function beginTurn(){S.energy=3+(S.passive.core?1:0);S.shield=false;S.slung=false;S.played=0;draw(5+(S.passive.bay?1:0))}
+function play(i){
+ const id=S.hand[i],c=CARDS[id];if(c.c>S.energy)return;
+ S.energy-=c.c;S.hand.splice(i,1);S.disc.push(id);S.played++;const hz=S.track[S.turn];let d=0;
+ switch(id){case'thrust':d=2;S.heat++;break;case'burn':d=5;S.heat+=3;break;case'shield':S.shield=true;break;
+ case'sling':d=hz==='gravity'?4:1;if(hz==='gravity')S.slung=true;break;case'cool':S.heat=Math.max(0,S.heat-2);break;
+ case'sail':d=hz==='flare'?3:1;break;case'over':S.energy+=2;S.heat+=2;break;case'scan':draw(2);break;case'drift':d=S.played;break}
+ S.dist+=d;S.log=`${c.n}${d?` +${d} distance`:''}`;render();
+}
+function endTurn(){
+ const hz=S.track[S.turn];const msg=[];
+ if(hz==='asteroid'&&!S.shield){const l=S.passive.hull?1:3;S.dist=Math.max(0,S.dist-l);msg.push(`Asteroids hit: -${l}`)}
+ if(hz==='gravity'&&!S.slung){S.dist=Math.max(0,S.dist-1);msg.push('Gravity drag: -1')}
+ if(hz==='flare'){S.heat+=2;msg.push('Flare: +2 heat')}
+ if(S.passive.sink)S.heat=Math.max(0,S.heat-1);
+ if(S.heat>=MAXHEAT){S.dist=Math.max(0,S.dist-4);S.heat=2;msg.push('OVERHEAT: emergency vent, -4')}
+ S.disc.push(...S.hand);S.hand=[];S.turn++;S.log=msg.join(' · ')||'Clean sector.';
+ if(S.turn>=TURNS)finish();else beginTurn();render();
+}
+function medal(d){for(const[m,v]of MEDALS)if(d>=v)return m;return null}
+function finish(){S.phase='done';const k='dc-best-'+S.seed;const b=store.get(k,0);S.newBest=S.dist>b;if(S.newBest)store.set(k,S.dist);
+ const st=store.get('dc-stats',{runs:0,gold:0,silver:0,bronze:0});st.runs++;const m=medal(S.dist);if(m)st[m]++;store.set('dc-stats',st)}
+function share(){const m=medal(S.dist);const g=S.ghost[TURNS-1];
+ const txt=`Drift Circuit ${S.daily?'daily '+S.seed:'seed '+S.seed}\n${S.dist} ly ${m?'('+m+')':''} vs ghost ${g} ${S.dist>g?'WIN':'LOSS'}\nShip: ${S.parts.map(p=>PARTS[p].n).join(', ')}`;
+ const done=()=>{S.log='Result copied.';render()};
+ navigator.clipboard?.writeText(txt).then(done,()=>{S.log=txt;render()})??(S.log=txt,render())}
+function trackHTML(){return `<div class="track">${S.track.map((h,i)=>`<div class="seg hz-${h} ${S.phase==='race'&&i===S.turn?'now':''} ${i<S.turn?'past':''}"><b>${HZ[h].g}</b>${i+1}</div>`).join('')}</div>`}
+function render(){
+ const st=store.get('dc-stats',{runs:0,gold:0,silver:0,bronze:0});
+ let h=`<div class="top"><h1>Drift Circuit</h1><span class="dim">${S.daily?'Daily':'Seed'} ${S.seed}</span></div>`;
+ if(S.phase==='draft'){
+  h+=`<h2>Build your ship · part ${S.round+1} of 4</h2><p class="dim">Choose a part. You will race this course over 8 turns:</p>${trackHTML()}
+  <div class="chips">${Object.entries(HZ).map(([k,v])=>`<span class="chip">${v.g} ${v.n}</span>`).join('')}</div>
+  <div style="display:flex;flex-direction:column;gap:8px">${S.offer.map(k=>`<button class="part" onclick="pick('${k}')"><b>${PARTS[k].n}</b><span class="dim">${PARTS[k].d}</span></button>`).join('')}</div>
+  <p class="dim">Ship so far: ${S.parts.map(p=>PARTS[p].n).join(', ')||'stock frame'} · deck ${S.deck.length} cards</p>
+  <p class="dim">Lifetime: ${st.runs} races · ${st.gold} gold · ${st.silver} silver · ${st.bronze} bronze</p>`;
+ }else if(S.phase==='race'){
+  const hz=HZ[S.track[S.turn]];const gd=S.turn?S.ghost[S.turn-1]:0;const max=Math.max(50,S.dist,S.ghost[TURNS-1]);
+  h+=trackHTML()+`<div class="bars"><div class="bar"><span>You</span><span class="t"><i style="width:${S.dist/max*100}%"></i></span><span>${S.dist}</span></div>
+  <div class="bar ghost"><span>Ghost</span><span class="t"><i style="width:${gd/max*100}%"></i></span><span>${gd}</span></div></div>
+  <div class="gauges"><div class="g"><div class="lab">Energy</div><div class="v">${S.energy}</div></div>
+  <div class="g"><div class="lab">Heat ${S.heat}/${MAXHEAT}</div><div class="pips">${Array.from({length:MAXHEAT},(_,i)=>`<i class="${i<S.heat?'on':''}"></i>`).join('')}</div></div></div>
+  <div class="hazard"><b>Turn ${S.turn+1}: ${hz.g} ${hz.n}</b><br><span class="dim">${hz.d}${S.shield?' Deflector up.':''}</span></div>
+  <div class="hand">${S.hand.map((id,i)=>{const c=CARDS[id];return`<button class="card" ${c.c>S.energy?'disabled':''} onclick="play(${i})"><span class="nm">${c.n}<span class="cost">${c.c}</span></span><span class="tx">${c.t}</span></button>`}).join('')}</div>
+  <div class="log">${S.log}</div><button class="btn" onclick="endTurn()">End turn</button>
+  <p class="dim">Draw pile ${S.draw.length} · discard ${S.disc.length} · overheat at ${MAXHEAT} costs 4 distance</p>`;
+ }else{
+  const m=medal(S.dist),g=S.ghost[TURNS-1];
+  h+=`<div class="hazard" style="display:flex;flex-direction:column;gap:8px"><span class="dim">Final distance</span><span class="big ${m?'medal-'+m:''}">${S.dist} ly</span>
+  <p>${m?m[0].toUpperCase()+m.slice(1)+' medal':'No medal'} · ghost reached ${g} · ${S.dist>g?'you beat the ghost':'the ghost won'}${S.newBest?' · new best on this course':''}</p>
+  <p class="dim">Medals: bronze 28, silver 36, gold 44</p></div>
+  <div class="log">${S.log}</div>
+  <div class="row"><button class="btn" onclick="share()">Copy result</button><button class="btn ghost" onclick="newRun(${S.seed})">Retry course</button></div>
+  <div class="row"><button class="btn ghost" onclick="newRun(Math.floor(Math.random()*1e8))">Random course</button>${S.daily?'':`<button class="btn ghost" onclick="newRun(today())">Daily course</button>`}</div>`;
+ }
+ app.innerHTML=h;
+}
+newRun(today());
+</script>

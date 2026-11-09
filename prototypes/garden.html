@@ -1,0 +1,227 @@
+<title>Pocket Garden</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Nunito+Sans:wght@400;700&display=swap">
+<style>
+/* Layout: season ledger + active rules, 4x4 plot as the hero, then the packet shelf and the coming-up queue. */
+:root{--bg:#eef2ea;--soil:#d9cbb4;--soil2:#cbb99c;--panel:#fbfcf8;--line:#c5cfbd;--fg:#22301f;--dim:#5f6d5a;--accent:#3f7d3a;--warn:#b5482f;--gold:#9a720c;--rule:#6a4c93;
+--disp:'Young Serif',Georgia,serif;--body:'Nunito Sans',system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#151b14;--soil:#3b3226;--soil2:#463b2d;--panel:#1f271d;--line:#35412f;--fg:#e4ecdf;--dim:#9aa893;--accent:#86c27c;--warn:#f08a6c;--gold:#e2b84a;--rule:#c3a6ec;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#151b14;--soil:#3b3226;--soil2:#463b2d;--panel:#1f271d;--line:#35412f;--fg:#e4ecdf;--dim:#9aa893;--accent:#86c27c;--warn:#f08a6c;--gold:#e2b84a;--rule:#c3a6ec;color-scheme:dark}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px}
+#app{max-width:480px;margin:0 auto;padding-block:12px 32px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:12px}
+h1{font-family:var(--disp);font-weight:400;font-size:26px;margin:0}
+h2{font-family:var(--disp);font-weight:400;font-size:19px;margin:0}
+.top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.dim{color:var(--dim);font-size:13px}
+p{margin:0;line-height:1.45}
+.ledger{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.sea{border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:12px;background:var(--panel);display:flex;flex-direction:column;gap:2px}
+.sea b{font-family:var(--disp);font-weight:400;font-size:15px}
+.sea .mod{color:var(--gold);font-weight:700}
+.sea.now{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.sea.ok b{color:var(--accent)}.sea.bad b{color:var(--warn)}
+.rules{display:flex;flex-wrap:wrap;gap:6px}
+.rchip{font-size:12px;border:1px solid var(--rule);color:var(--rule);border-radius:999px;padding:3px 9px}
+.scoreline{display:flex;justify-content:space-between;align-items:baseline}
+.big{font-family:var(--disp);font-size:34px;font-variant-numeric:tabular-nums}
+.plot{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;background:var(--soil2);padding:8px;border-radius:14px}
+.cell{aspect-ratio:1;max-width:100%;background:var(--soil);border:0;border-radius:9px;position:relative;font-size:clamp(26px,9vw,40px);display:grid;place-items:center;font-family:inherit;color:var(--fg);padding:0;cursor:default}
+.cell.ctr{box-shadow:inset 0 0 0 2px var(--rule)}
+.cell.can{cursor:pointer;outline:2px dashed var(--accent);outline-offset:-4px}
+.cell .pts{position:absolute;right:4px;bottom:3px;font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;background:var(--panel);border-radius:6px;padding:0 5px}
+.cell .delta{font-size:16px;font-weight:700;color:var(--accent);font-family:var(--body)}
+.cell .delta.neg{color:var(--warn)}
+.cell.last{box-shadow:0 0 0 2px var(--gold) inset}
+.packets{display:grid;grid-template-columns:repeat(var(--cols,3),1fr);gap:6px}
+.pk{font:inherit;color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:7px;text-align:left;display:flex;flex-direction:column;gap:3px;cursor:pointer;min-height:118px;min-width:0}
+.pk.sel{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.pk .ic{font-size:24px}.pk b{font-family:var(--disp);font-weight:400;font-size:14px}
+.pk .tx{font-size:11px;color:var(--dim);line-height:1.3}
+.tag{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);font-weight:700;font-family:var(--body)}
+.soon{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--panel);border:1px dashed var(--line);border-radius:10px;padding:8px 10px}
+.sn{display:flex;align-items:center;gap:4px;font-size:22px}.sn small{font-size:12px;color:var(--dim)}
+.choice{display:flex;flex-direction:column;gap:8px}
+.opt{font:inherit;color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;text-align:left;cursor:pointer;display:grid;grid-template-columns:40px 1fr;gap:2px 10px;align-items:center}
+.opt:hover{border-color:var(--accent)}
+.opt .ic{font-size:30px;grid-row:span 2;text-align:center}
+.opt b{font-family:var(--disp);font-weight:400;font-size:17px}
+.opt.rule{border-color:var(--rule)}.opt.rule b{color:var(--rule)}.opt.rule .ic{color:var(--rule)}
+.roster{display:flex;gap:6px;flex-wrap:wrap;font-size:24px;min-height:32px}
+.btn{font:inherit;font-weight:700;background:var(--accent);color:var(--panel);border:0;border-radius:10px;padding:12px;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--fg);border:1px solid var(--line)}
+.btn:disabled{opacity:.4;cursor:default}
+.row{display:flex;gap:8px;flex-wrap:wrap}.row .btn{flex:1}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.msg{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.hi{color:var(--gold);font-weight:700}
+details summary{cursor:pointer;color:var(--dim);font-size:13px}
+.guide{display:grid;grid-template-columns:28px 1fr;gap:4px 8px;font-size:13px;margin-top:8px}
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mode{font:inherit;color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:4px}
+.mode b{font-family:var(--disp);font-weight:400;font-size:17px}
+</style>
+<div id="app"></div>
+<script>
+const SP={
+ oak:{n:'Oak',i:'🌳',g:'tree',t:'3 pts. Shades neighbours.'},
+ willow:{n:'Willow',i:'🌴',g:'tree',t:'1 pt, +2 per adjacent water. Shades neighbours.'},
+ birch:{n:'Birch',i:'🌲',g:'tree',t:'2 pts, +1 per adjacent tree. No shade.'},
+ fern:{n:'Fern',i:'🌿',g:'plant',t:'1 pt, +2 per adjacent tree.'},
+ moss:{n:'Moss',i:'🌱',g:'plant',t:'1 pt, +1 per adjacent Moss or Fern.'},
+ mush:{n:'Mushroom',i:'🍄',g:'fungus',t:'+2 per adjacent tree or Fern.'},
+ truffle:{n:'Truffle',i:'🟤',g:'fungus',t:'+3 per adjacent Oak.'},
+ sun:{n:'Sunflower',i:'🌻',g:'flower',t:'4 pts, but 0 next to a shading tree.'},
+ rose:{n:'Rose',i:'🌹',g:'flower',t:'1 pt, +1 per different species adjacent.'},
+ clover:{n:'Clover',i:'☘️',g:'flower',t:'1 pt, +1 per adjacent Clover.'},
+ lily:{n:'Water Lily',i:'🪷',g:'flower',t:'1 pt, +2 per adjacent water.'},
+ tulip:{n:'Tulip',i:'🌷',g:'flower',t:'+1 per other flower in its row or column.'},
+ bee:{n:'Bee',i:'🐝',g:'animal',t:'+2 per adjacent flower.'},
+ fly:{n:'Butterfly',i:'🦋',g:'animal',t:'+1 per flower in the garden (max 6).'},
+ frog:{n:'Frog',i:'🐸',g:'animal',t:'+3 per adjacent water.'},
+ hog:{n:'Hedgehog',i:'🦔',g:'animal',t:'+3 per adjacent fungus.'},
+ snail:{n:'Snail',i:'🐌',g:'animal',t:'2 pts, +2 if no animal is adjacent.'},
+ pond:{n:'Pond',i:'💧',g:'water',t:'2 pts.'},
+ stream:{n:'Stream',i:'🌊',g:'water',t:'1 pt, +2 per adjacent Stream.'}
+};
+const RULES={
+ diag:{n:'Wide Wings',t:'Animals also count diagonal neighbours.'},
+ wet:{n:'Wet Meadow',t:'Water also counts as a flower.'},
+ canopy:{n:'High Canopy',t:'Trees no longer shade.'},
+ pollin:{n:'Pollination',t:'Flowers +1 per adjacent animal.'},
+ myc:{n:'Mycelium',t:'Fungi +1 per other fungus anywhere.'},
+ biodiv:{n:'Biodiversity',t:'+2 per different species in the garden.'},
+ hedge:{n:'Hedgerow',t:'Plants and trees on the outer edge +1.'},
+ center:{n:'Centrepiece',t:'The 4 centre squares score double.'},
+ mono:{n:'Rows of a Kind',t:'+4 per full row or column of one type (tree, flower, animal...).'},
+ roots:{n:'Deep Roots',t:'Trees +1 per adjacent plant or fungus.'},
+ twins:{n:'Companion Planting',t:'+1 for every tile next to its own species.'},
+ bloom2:{n:'Second Bloom',t:'Flowers score double in Autumn.'},
+ shelf:{n:'Seed Catalogue',t:'Shelf holds 4 packets and you see 1 more ahead.'},
+ heap:{n:'Compost Heap',t:'Compost twice per season.'}
+};
+const MODS={
+ bloom:{n:'Bloom',t:'Flowers +1 each',f:g=>g==='flower'?1:0},
+ wild:{n:'Wild',t:'Animals +1 each',f:g=>g==='animal'?1:0},
+ rain:{n:'Rainy',t:'Water +2 each',f:g=>g==='water'?2:0},
+ gloom:{n:'Overcast',t:'Plants and fungi +1 each',f:g=>g==='plant'||g==='fungus'?1:0},
+ grove:{n:'Old growth',t:'Trees +2 each',f:g=>g==='tree'?2:0},
+ heat:{n:'Heatwave',t:'Flowers +2, water −1',f:g=>g==='flower'?2:g==='water'?-1:0}
+};
+const N=4,PER=5,DRAFT=6,BASE=[16,37,64],DAILY_T=[16,37,64],MAXRANK=10,SEASONS=['Spring','Summer','Autumn'];
+const RANKRULES=[[3,'A rock takes one square'],[5,'You see 1 fewer packet ahead'],[7,'No composting']];
+const rankTargets=r=>BASE.map(t=>Math.round(t*(1+0.03*(r-1))));
+function rng(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const today=()=>{const d=new Date();return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate()};
+const store={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const adj=i=>{const r=Math.floor(i/N),c=i%N,o=[];if(r)o.push(i-N);if(r<N-1)o.push(i+N);if(c)o.push(i-1);if(c<N-1)o.push(i+1);return o};
+const dia=i=>{const r=Math.floor(i/N),c=i%N,o=[];for(const[dr,dc]of[[-1,-1],[-1,1],[1,-1],[1,1]]){const rr=r+dr,cc=c+dc;if(rr>=0&&rr<N&&cc>=0&&cc<N)o.push(rr*N+cc)}return o};
+const CENTRE=new Set([5,6,9,10]);const edge=i=>{const r=Math.floor(i/N),c=i%N;return r===0||c===0||r===N-1||c===N-1};
+const real=x=>!!x&&x!=='rock';
+// C = {mod, rules:Set, season}
+const isT=(x,t,C)=>real(x)&&(SP[x].g===t||(t==='flower'&&C.rules.has('wet')&&SP[x].g==='water'));
+const shades=(x,C)=>!C.rules.has('canopy')&&(x==='oak'||x==='willow');
+function cellScore(g,i,C){const s=g[i];if(!real(s))return 0;
+ let idx=adj(i);if(C.rules.has('diag')&&SP[s].g==='animal')idx=idx.concat(dia(i));
+ const nb=idx.map(j=>g[j]).filter(real);const cnt=f=>nb.filter(f).length;const T=t=>x=>isT(x,t,C);let v=0;
+ const r=Math.floor(i/N),c=i%N;
+ switch(s){
+  case'oak':v=3;break;case'willow':v=1+2*cnt(T('water'));break;case'birch':v=2+cnt(T('tree'));break;
+  case'fern':v=1+2*cnt(T('tree'));break;case'moss':v=1+cnt(x=>x==='moss'||x==='fern');break;
+  case'mush':v=2*cnt(x=>isT(x,'tree',C)||x==='fern');break;case'truffle':v=3*cnt(x=>x==='oak');break;
+  case'sun':v=nb.some(x=>shades(x,C))?0:4;break;case'rose':v=1+new Set(nb.filter(x=>x!=='rose')).size;break;
+  case'clover':v=1+cnt(x=>x==='clover');break;case'lily':v=1+2*cnt(T('water'));break;
+  case'tulip':for(let k=0;k<N;k++){if(k!==c&&isT(g[r*N+k],'flower',C))v++;if(k!==r&&isT(g[k*N+c],'flower',C))v++}break;
+  case'bee':v=2*cnt(T('flower'));break;case'fly':v=Math.min(6,g.filter(x=>isT(x,'flower',C)).length);break;
+  case'frog':v=3*cnt(T('water'));break;case'hog':v=3*cnt(T('fungus'));break;case'snail':v=2+(cnt(x=>SP[x].g==='animal')?0:2);break;
+  case'pond':v=2;break;case'stream':v=1+2*cnt(x=>x==='stream');break}
+ const ad=adj(i).map(j=>g[j]).filter(real);
+ if(C.rules.has('bloom2')&&C.season===2&&isT(s,'flower',C))v*=2;
+ if(C.mod)v+=MODS[C.mod].f(SP[s].g);
+ if(C.rules.has('pollin')&&isT(s,'flower',C))v+=ad.filter(x=>SP[x].g==='animal').length;
+ if(C.rules.has('myc')&&SP[s].g==='fungus')v+=g.filter(x=>real(x)&&SP[x].g==='fungus').length-1;
+ if(C.rules.has('hedge')&&edge(i)&&(SP[s].g==='plant'||SP[s].g==='tree'))v+=1;
+ if(C.rules.has('roots')&&SP[s].g==='tree')v+=ad.filter(x=>SP[x].g==='plant'||SP[x].g==='fungus').length;
+ if(C.rules.has('twins')&&ad.includes(s))v+=1;
+ if(C.rules.has('center')&&CENTRE.has(i))v*=2;
+ return v}
+function bonus(g,C){let b=0;
+ if(C.rules.has('biodiv'))b+=2*new Set(g.filter(real)).size;
+ if(C.rules.has('mono')){const lines=[];for(let k=0;k<N;k++){lines.push([0,1,2,3].map(j=>g[k*N+j]));lines.push([0,1,2,3].map(j=>g[j*N+k]))}
+  for(const L of lines)if(L.every(real)&&new Set(L.map(x=>SP[x].g)).size===1)b+=4}
+ return b}
+const total=(g,C)=>g.reduce((a,_,i)=>a+cellScore(g,i,C),0)+bonus(g,C);
+function profile(){return store.get('pg2-profile',{runs:0,years:0,best:0,rank:1,stars:0})}
+let S;const app=document.getElementById('app');
+const pickN=(R,arr,n)=>{const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(R()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a.slice(0,n)};
+function newRun(seed,daily){const R=rng(seed),R2=rng(seed^0x5bd1e995);const rk=daily?1:(profile().rank||1);
+ S={seed,R,R2,daily,rank:rk,targets:daily?DAILY_T:rankTargets(rk),mods:pickN(R2,Object.keys(MODS),3),rules:new Set(),ruleList:[],roster:[],queue:[],
+  grid:Array(N*N).fill(null),season:0,placed:0,sel:null,results:[],phase:'draft',last:-1,banked:0,note:''};
+ if(rk>=3)S.grid[Math.floor(R2()*16)]='rock';
+ dealDraft();render()}
+function dealDraft(){S.offer=pickN(S.R2,Object.keys(SP).filter(k=>!S.roster.includes(k)),3)}
+function draft(k){S.roster.push(k);if(S.roster.length<DRAFT)dealDraft();else{S.phase='rule';S.ruleOffer=pickN(S.R2,Object.keys(RULES),3)}render()}
+const C=()=>({mod:S.mods[Math.min(S.season,2)],rules:S.rules,season:Math.min(S.season,2)});
+const shelfN=()=>S.rules.has('shelf')?4:3;const aheadN=()=>(S.rank>=5?2:3)+(S.rules.has('shelf')?1:0);
+const compostMax=()=>S.rank>=7?0:S.rules.has('heap')?2:1;
+function fillQueue(){while(S.queue.length<shelfN()+aheadN())S.queue.push(S.roster[Math.floor(S.R()*S.roster.length)])}
+function takeRule(k){S.rules.add(k);S.ruleList.push(k);fillQueue();S.rerolls=compostMax();S.phase='play';render()}
+const selSp=()=>S.sel!==null?S.queue[S.sel]:null;
+function choose(i){if(i>=shelfN())return;S.sel=S.sel===i?null:i;render()}
+function place(i){const sp=selSp();if(!sp||S.grid[i])return;S.grid[i]=sp;S.last=i;S.placed++;S.queue.splice(S.sel,1);fillQueue();S.sel=null;
+ if(S.placed%PER===0){const sc=total(S.grid,C());const ok=sc>=S.targets[S.season];S.results.push(sc);S.banked+=sc;
+  if(!ok){S.phase='lost';finish()}else if(S.season===2){S.phase='won';finish()}
+  else{S.season++;S.phase='rule';S.ruleOffer=pickN(S.R2,Object.keys(RULES).filter(k=>!S.rules.has(k)),3)}}
+ render()}
+function reroll(){if(!S.rerolls)return;S.rerolls--;S.queue.splice(0,shelfN());fillQueue();S.sel=null;render()}
+function finish(){const p=profile();p.runs++;
+ if(S.phase==='won'){p.years++;const ratio=S.results[2]/S.targets[2];S.stars=ratio>=1.15?3:ratio>=1.07?2:1;p.stars=(p.stars||0)+S.stars;if(!S.daily&&(p.rank||1)<MAXRANK){p.rank=(p.rank||1)+1;S.rankUp=p.rank}}
+ p.best=Math.max(p.best,S.banked);store.set('pg2-profile',p);const k='pg2-best-'+S.seed+(S.daily?'d':'');S.newBest=S.banked>store.get(k,0);if(S.newBest)store.set(k,S.banked)}
+function share(){const map=S.grid.map(s=>s==='rock'?'🪨':s?SP[s].i:'🟫');let rows='';for(let r=0;r<N;r++)rows+=map.slice(r*N,r*N+N).join('')+'\n';
+ const txt=`Pocket Garden ${S.daily?'daily '+S.seed:'rank '+S.rank}\n${S.phase==='won'?'Bloomed '+'★'.repeat(S.stars):'Wilted'} · ${S.banked} pts (${S.results.join(' / ')})\nRules: ${S.ruleList.map(k=>RULES[k].n).join(', ')}\n${rows}`;
+ navigator.clipboard?.writeText(txt).then(()=>{S.note='Copied garden to clipboard.';render()},()=>{S.note=txt;render()})}
+const ledger=()=>`<div class="ledger">${SEASONS.map((n,i)=>{const r=S.results[i];const cls=r===undefined?(i===S.season&&S.phase==='play'?'now':''):(r>=S.targets[i]?'ok':'bad');
+  return`<div class="sea ${cls}">${n}<b>${r===undefined?'need '+S.targets[i]:r+' / '+S.targets[i]}</b><span class="mod">${MODS[S.mods[i]].n}</span><span class="dim" style="font-size:11px">${MODS[S.mods[i]].t}</span></div>`}).join('')}</div>`;
+const rulesBar=()=>S.ruleList.length?`<div class="rules">${S.ruleList.map(k=>`<span class="rchip">${RULES[k].n}: ${RULES[k].t}</span>`).join('')}</div>`:'';
+const roster=()=>`<div class="roster" aria-label="Your species">${S.roster.map(k=>`<span title="${SP[k].n}">${SP[k].i}</span>`).join('')}</div>`;
+function plotHTML(interactive){const cx=C();const cur=total(S.grid,cx);const sp=interactive?selSp():null;
+ return`<div class="plot">${S.grid.map((s,i)=>{const ctr=S.rules.has('center')&&CENTRE.has(i)?'ctr':'';
+  if(s==='rock')return`<button class="cell ${ctr}" aria-label="Rock">🪨</button>`;
+  if(s)return`<button class="cell ${ctr} ${i===S.last?'last':''}" aria-label="${SP[s].n}">${SP[s].i}<span class="pts">${cellScore(S.grid,i,cx)}</span></button>`;
+  if(sp){const g=[...S.grid];g[i]=sp;const d=total(g,cx)-cur;return`<button class="cell can ${ctr}" onclick="place(${i})" aria-label="Plant here, ${d} points"><span class="delta ${d<0?'neg':''}">${d>=0?'+':''}${d}</span></button>`}
+  return`<button class="cell ${ctr}" aria-label="Empty"></button>`}).join('')}</div>`}
+function render(){const p=profile();
+ let h=`<div class="top"><h1>Pocket Garden</h1><span class="dim">${S.daily?'Daily '+S.seed:'Journey · rank '+S.rank}</span></div>`;
+ if(S.phase==='draft'){
+  h+=ledger()+`<h2>Choose your seeds · ${S.roster.length+1} of ${DRAFT}</h2><p class="dim">Only the species you draft appear on your shelf this year. Plan for the weather above.</p>${roster()}
+  <div class="choice">${S.offer.map(k=>`<button class="opt" onclick="draft('${k}')"><span class="ic">${SP[k].i}</span><b>${SP[k].n} <span class="tag">${SP[k].g}</span></b><span class="dim">${SP[k].t}</span></button>`).join('')}</div>`;
+ }else if(S.phase==='rule'){
+  const first=!S.results.length;
+  h+=ledger()+(first?'':`<div class="msg"><p><b>${SEASONS[S.season-1]} scored ${S.results.at(-1)}.</b> The garden carries over. ${SEASONS[S.season]} needs ${S.targets[S.season]}.</p></div>`)+
+  `<h2>${first?'Pick your first garden rule':'Pick a new garden rule'}</h2><p class="dim">Rules stack for the rest of the year. Your seeds:</p>${roster()}${rulesBar()}
+  <div class="choice">${S.ruleOffer.map(k=>`<button class="opt rule" onclick="takeRule('${k}')"><span class="ic">✦</span><b>${RULES[k].n}</b><span class="dim">${RULES[k].t}</span></button>`).join('')}</div>`;
+ }else{
+  const cur=total(S.grid,C());
+  h+=ledger()+rulesBar()+`<div class="scoreline"><span class="dim">${SEASONS[Math.min(S.season,2)]} score now${S.phase==='play'?' · '+(PER-S.placed%PER)+' plantings left':''}</span><span class="big">${cur}</span></div>`+plotHTML(S.phase==='play');
+  if(S.phase==='play'){const sp=selSp();
+   h+=`<p class="dim">${sp?`Tap a square to plant. Numbers show the change to this season's score.`:`Pick a packet from the shelf. The next in line slides on.`}</p>
+   <div class="packets" style="--cols:${shelfN()}">${S.queue.slice(0,shelfN()).map((k,i)=>`<button class="pk ${S.sel===i?'sel':''}" onclick="choose(${i})"><span class="ic">${SP[k].i}</span><b>${SP[k].n}</b><span class="tx">${SP[k].t}</span></button>`).join('')}</div>
+   <div class="soon"><span class="dim">Coming up</span>${S.queue.slice(shelfN(),shelfN()+aheadN()).map(k=>`<span class="sn">${SP[k].i}<small>${SP[k].n}</small></span>`).join('<span class="dim">›</span>')}</div>
+   <button class="btn ghost" ${S.rerolls?'':'disabled'} onclick="reroll()">Compost the shelf (${S.rerolls} left this season)</button>`;
+  }else{
+   h+=`<div class="msg"><p><b>${S.phase==='won'?'Your garden bloomed all year. '+'★'.repeat(S.stars)+'☆'.repeat(3-S.stars):'The garden wilted in '+SEASONS[S.season]+'.'}</b> Total ${S.banked} points${S.newBest?' · new best on this seed':''}.</p>
+   ${S.phase==='won'?`<p class="dim">Stars: 2 for beating Autumn's target by 7%, 3 for 15%.</p>`:''}
+   ${S.rankUp?`<p class="hi">Journey rank ${S.rankUp}: targets rise 3%${(RANKRULES.find(x=>x[0]===S.rankUp)||[])[1]?'. New rule: '+RANKRULES.find(x=>x[0]===S.rankUp)[1]:''}.</p>`:''}
+   <p class="dim">${S.note}</p>
+   <div class="row"><button class="btn" onclick="share()">Copy garden</button><button class="btn ghost" onclick="newRun(${S.seed},${S.daily})">Replay this seed</button></div>
+   <div class="modes"><button class="mode" onclick="newRun(Math.floor(Math.random()*1e8),false)"><b>New journey garden</b><span class="dim">Rank ${p.rank}. Win a year to rank up.</span></button>
+   <button class="mode" onclick="newRun(today(),true)"><b>Daily garden</b><span class="dim">Same weather, seeds and rule offers for everyone today.</span></button></div></div>`;
+  }
+ }
+ h+=`<details><summary>All species and rules</summary><div class="guide">${Object.values(SP).map(s=>`<span>${s.i}</span><span><b>${s.n}</b> <span class="tag">${s.g}</span>: ${s.t}</span>`).join('')}
+ ${Object.values(RULES).map(r=>`<span>✦</span><span><b>${r.n}</b>: ${r.t}</span>`).join('')}</div></details>
+ <p class="dim">Draft 6 species, pick a rule, then plant 5 per season. A new rule after Spring and Summer. ${p.runs} gardens · ${p.years} full years · ${p.stars} ★ · best ${p.best} · Rank rules: ${RANKRULES.map(([n,t])=>`${n}: ${t}`).join('; ')}</p>`;
+ app.innerHTML=h;
+}
+newRun(Math.floor(Math.random()*1e8),false);
+</script>

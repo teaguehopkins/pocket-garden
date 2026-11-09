@@ -1,0 +1,136 @@
+<title>Night Crew</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter+Tight:wght@400;600&display=swap">
+<style>
+/* Layout: blueprint sheet. Floor plan of rooms on top, alarm meter, current room's obstacles, then the crew hand. Single blueprint theme. */
+:root{--bg:#0f2a4a;--panel:#143559;--line:#3a6a9c;--fg:#e8f1fb;--dim:#9fb9d6;--accent:#ffd34d;--alarm:#ff5a4f;--clear:#6fe0a8;
+--disp:'Bebas Neue',Impact,sans-serif;--body:'Inter Tight',system-ui,sans-serif;color-scheme:dark}
+html,body{height:100%}
+body{background:var(--bg);background-image:linear-gradient(var(--panel) 1px,transparent 1px),linear-gradient(90deg,var(--panel) 1px,transparent 1px);background-size:24px 24px;color:var(--fg);font-family:var(--body);font-size:15px}
+#app{max-width:520px;margin:0 auto;padding-block:12px 32px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:14px}
+h1{font-family:var(--disp);font-weight:400;font-size:34px;letter-spacing:.04em;margin:0;line-height:1}
+h2{font-family:var(--disp);font-weight:400;font-size:24px;letter-spacing:.04em;margin:0}
+.top{display:flex;justify-content:space-between;align-items:baseline}
+.dim{color:var(--dim);font-size:13px}
+p{margin:0;line-height:1.45}
+.plan{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.rm{border:1.5px solid var(--line);padding:6px 4px;font-size:11px;text-align:center;color:var(--dim);background:var(--bg)}
+.rm b{display:block;font-family:var(--disp);font-weight:400;font-size:16px;color:var(--fg)}
+.rm.now{border-color:var(--accent)}.rm.done{opacity:.4}
+.meter{display:flex;gap:3px}.meter i{flex:1;height:12px;background:var(--panel);border:1px solid var(--line)}
+.meter i.on{background:var(--alarm);border-color:var(--alarm)}
+.alab{display:flex;justify-content:space-between;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+.room{border:1.5px solid var(--line);background:var(--bg);padding:12px;display:flex;flex-direction:column;gap:10px}
+.obs{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px}
+.ob{font:inherit;color:var(--fg);background:var(--panel);border:1.5px solid var(--line);padding:10px 8px;text-align:left;cursor:default;display:flex;flex-direction:column;gap:2px}
+.ob b{font-family:var(--disp);font-weight:400;font-size:20px;letter-spacing:.04em}
+.ob.loot{border-style:dashed;border-color:var(--accent)}
+.ob.cleared{opacity:.35;text-decoration:line-through}
+.ob.target{border-color:var(--clear);box-shadow:0 0 0 2px var(--clear);cursor:pointer}
+.hand{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
+.card{font:inherit;color:#1b1f2a;background:#f4efe1;border:0;border-radius:4px;padding:9px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:3px;min-height:96px;box-shadow:2px 3px 0 rgba(0,0,0,.35)}
+.card b{font-family:var(--disp);font-weight:400;font-size:20px;letter-spacing:.03em}
+.card .who{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#6b5b3a}
+.card .tx{font-size:12px;line-height:1.3;color:#3a3a3a}
+.card.sel{outline:3px solid var(--accent);outline-offset:1px}
+.card.dead{opacity:.45}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{font-family:var(--disp);font-size:20px;letter-spacing:.06em;background:var(--accent);color:#1b1f2a;border:0;padding:12px;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--fg);border:1.5px solid var(--line)}
+.btn:disabled{opacity:.4;cursor:default}
+.row{display:flex;gap:8px;flex-wrap:wrap}.row .btn{flex:1}
+.crew{font:inherit;color:var(--fg);background:var(--panel);border:1.5px solid var(--line);padding:12px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:4px}
+.crew:hover{border-color:var(--accent)}
+.crew b{font-family:var(--disp);font-weight:400;font-size:22px;letter-spacing:.04em}
+.log{font-size:13px;color:var(--dim);min-height:1.4em}
+.big{font-family:var(--disp);font-size:56px;line-height:1;color:var(--accent)}
+</style>
+<div id="app"></div>
+<script>
+const OB={guard:'Guard',lock:'Lock',cam:'Camera',laser:'Laser'};
+const CARDS={
+ hack:{n:'Hack',w:'Hacker',clr:['cam'],t:'Clear a Camera.'},
+ loop:{n:'Loop Feed',w:'Hacker',fx:'loop',t:'Alarm −2.'},
+ pick:{n:'Lockpick',w:'Locksmith',clr:['lock'],t:'Clear a Lock.'},
+ drill:{n:'Drill',w:'Locksmith',clr:['lock','laser'],al:1,t:'Clear a Lock or Laser. Alarm +1.'},
+ take:{n:'Takedown',w:'Bruiser',clr:['guard'],al:1,t:'Clear a Guard. Alarm +1.'},
+ smash:{n:'Smash',w:'Bruiser',clr:['lock','cam'],al:2,t:'Clear a Lock or Camera. Alarm +2.'},
+ dist:{n:'Distract',w:'Grifter',clr:['guard'],t:'Clear a Guard.'},
+ disg:{n:'Disguise',w:'Grifter',clr:['guard','cam'],t:'Clear a Guard or Camera.'},
+ flip:{n:'Vault Over',w:'Cat Burglar',clr:['laser'],t:'Clear a Laser.'},
+ short:{n:'Shortcut',w:'Cat Burglar',clr:['guard','lock','cam','laser'],t:'Clear anything. Burned after use.',burn:1},
+ plan:{n:'Blueprints',w:'Planner',fx:'plan',t:'Draw 2 cards.'},
+ calm:{n:'Lay Low',w:'Planner',fx:'calm',t:'Alarm −1. Draw 1.'}
+};
+const CREW={
+ Hacker:{d:'Cameras are nothing. Can buy time.',c:['hack','hack','loop']},
+ Locksmith:{d:'Quiet on locks. Drill also cuts lasers.',c:['pick','pick','drill']},
+ Bruiser:{d:'Clears guards and doors, loudly.',c:['take','take','smash']},
+ Grifter:{d:'Talks past guards and cameras.',c:['dist','disg','disg']},
+ 'Cat Burglar':{d:'Lasers, plus one get-out-of-jail card.',c:['flip','flip','short']},
+ Planner:{d:'Card draw and a calm head.',c:['plan','plan','calm']}
+};
+const START=['pick','dist','hack','flip'];const MAXA=12,HAND=4,ROOMS=5;
+const RN=['Lobby','Hallway','Offices','Server room','Vault'];
+function rng(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const today=()=>{const d=new Date();return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate()};
+const store={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+let S;const app=document.getElementById('app');
+const pickR=a=>a[Math.floor(S.R()*a.length)];
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(S.R()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function newRun(seed){
+ S={seed,R:rng(seed),daily:seed===today(),phase:'recruit',crew:[],deck:[...START],alarm:0,room:0,loot:0,log:'',sel:null,turns:0};
+ const types=Object.keys(OB);
+ S.rooms=RN.map((n,i)=>{const req=i===4?3:1+Math.floor(i/2)+(S.R()<.5?1:0);const obs=[];
+  for(let k=0;k<req;k++)obs.push({t:pickR(types),loot:0,ok:false});
+  if(i<4)obs.push({t:pickR(types),loot:500*(1+Math.floor(S.R()*4)),ok:false});return{n,obs}});
+ S.offer=shuffle(Object.keys(CREW)).slice(0,5);render();
+}
+function recruit(k){S.crew.push(k);S.deck.push(...CREW[k].c);S.offer=S.offer.filter(x=>x!==k);if(S.crew.length===3){S.phase='heist';S.draw=shuffle([...S.deck]);S.disc=[];S.hand=[];draw(HAND)}render()}
+function draw(n){for(let i=0;i<n;i++){if(!S.draw.length){if(!S.disc.length)return;S.draw=shuffle(S.disc);S.disc=[]}S.hand.push(S.draw.pop())}}
+const cur=()=>S.rooms[S.room];
+const targets=id=>{const c=CARDS[id];if(!c.clr)return[];return cur().obs.map((o,i)=>!o.ok&&c.clr.includes(o.t)?i:-1).filter(i=>i>=0)};
+function tapCard(i){const id=S.hand[i],c=CARDS[id];
+ if(c.fx){S.hand.splice(i,1);S.disc.push(id);if(c.fx==='loop')S.alarm=Math.max(0,S.alarm-2);if(c.fx==='plan')draw(2);if(c.fx==='calm'){S.alarm=Math.max(0,S.alarm-1);draw(1)}S.log=c.n+' played.';S.sel=null;render();return}
+ const tg=targets(id);if(!tg.length){S.log=`${c.n} has nothing to clear here.`;S.sel=null;render();return}
+ if(tg.length===1){apply(i,tg[0]);return}S.sel=S.sel===i?null:i;S.log='Tap the obstacle to clear.';render()}
+function tapOb(j){if(S.sel===null||!targets(S.hand[S.sel]).includes(j))return;apply(S.sel,j)}
+function apply(i,j){const id=S.hand[i],c=CARDS[id],o=cur().obs[j];o.ok=true;S.hand.splice(i,1);if(!c.burn)S.disc.push(id);
+ if(c.al)S.alarm+=c.al;if(o.loot)S.loot+=o.loot;S.log=`${c.n} cleared the ${OB[o.t]}${o.loot?` and grabbed $${o.loot}`:''}${c.al?`. Alarm +${c.al}`:''}.`;S.sel=null;check();render()}
+const reqDone=()=>cur().obs.every(o=>o.loot||o.ok);
+function advance(){if(!reqDone())return;if(S.room===ROOMS-1){S.loot+=5000;S.phase='escaped';finish()}else{S.room++;S.log=`Entered the ${cur().n}.`}S.sel=null;render()}
+function endTurn(){const g=cur().obs.filter(o=>!o.ok&&!o.loot&&o.t==='guard').length;const a=1+g;S.alarm+=a;S.turns++;
+ S.disc.push(...S.hand);S.hand=[];draw(HAND);S.sel=null;S.log=`Time passes. Alarm +${a}${g?` (${g} guard${g>1?'s':''} patrolling)`:''}.`;check();render()}
+function check(){if(S.alarm>=MAXA&&S.phase==='heist'){S.alarm=MAXA;S.phase='busted';finish()}}
+function finish(){const sc=S.phase==='escaped'?S.loot:0;const k='nc-best-'+S.seed;S.newBest=sc>store.get(k,0);if(S.newBest)store.set(k,sc);
+ const st=store.get('nc-stats',{runs:0,wins:0,best:0});st.runs++;if(sc)st.wins++;st.best=Math.max(st.best,sc);store.set('nc-stats',st)}
+function share(){const txt=`Night Crew ${S.daily?'daily ':'seed '}${S.seed}\n${S.phase==='escaped'?`Escaped with $${S.loot}`:'Busted in the '+cur().n} · alarm ${S.alarm}/${MAXA} · ${S.turns} turns\nCrew: ${S.crew.join(', ')}`;
+ navigator.clipboard?.writeText(txt).then(()=>{S.log='Result copied.';render()},()=>{S.log=txt;render()})}
+function planHTML(){return`<div class="plan">${S.rooms.map((r,i)=>`<div class="rm ${S.phase!=='recruit'&&i===S.room?'now':''} ${S.phase!=='recruit'&&i<S.room?'done':''}"><b>${i+1}</b>${r.n}<br>${r.obs.filter(o=>!o.loot).map(o=>({guard:'G',lock:'L',cam:'C',laser:'Z'})[o.t]).join(' ')}</div>`).join('')}</div>`}
+function render(){const st=store.get('nc-stats',{runs:0,wins:0,best:0});
+ let h=`<div class="top"><h1>Night Crew</h1><span class="dim">${S.daily?'Daily':'Seed'} ${S.seed}</span></div>`;
+ if(S.phase==='recruit'){
+  h+=`<h2>Recruit ${S.crew.length+1} of 3</h2><p class="dim">Tonight's floor plan (G guard, L lock, C camera, Z laser):</p>${planHTML()}
+  <div style="display:flex;flex-direction:column;gap:8px">${S.offer.map(k=>`<button class="crew" onclick="recruit('${k}')"><b>${k}</b><span class="dim">${CREW[k].d}</span><span class="dim">Cards: ${CREW[k].c.map(c=>CARDS[c].n).join(', ')}</span></button>`).join('')}</div>
+  <p class="dim">Crew so far: ${S.crew.join(', ')||'just you (Lockpick, Distract, Hack, Vault Over)'}</p><p class="dim">${st.runs} jobs · ${st.wins} clean escapes · best haul $${st.best}</p>`;
+ }else if(S.phase==='heist'){
+  const r=cur();const tg=S.sel!==null?targets(S.hand[S.sel]):[];
+  h+=planHTML()+`<div><div class="alab"><span>Alarm</span><span>${S.alarm}/${MAXA}</span></div><div class="meter">${Array.from({length:MAXA},(_,i)=>`<i class="${i<S.alarm?'on':''}"></i>`).join('')}</div></div>
+  <div class="room"><div class="top"><h2>${r.n}</h2><span class="dim">Loot $${S.loot}</span></div>
+  <div class="obs">${r.obs.map((o,j)=>`<button class="ob ${o.loot?'loot':''} ${o.ok?'cleared':''} ${tg.includes(j)?'target':''}" onclick="tapOb(${j})"><b>${OB[o.t]}</b><span class="dim">${o.loot?`Optional · $${o.loot}`:S.room===4?'Vault · $5000':'Blocks the way'}</span></button>`).join('')}</div>
+  <button class="btn" ${reqDone()?'':'disabled'} onclick="advance()">${S.room===ROOMS-1?'Crack vault and escape':'Move to next room'}</button></div>
+  <div class="hand">${S.hand.map((id,i)=>{const c=CARDS[id];const usable=c.fx||targets(id).length;return`<button class="card ${S.sel===i?'sel':''} ${usable?'':'dead'}" onclick="tapCard(${i})"><span class="who">${c.w}</span><b>${c.n}</b><span class="tx">${c.t}</span></button>`}).join('')}</div>
+  <div class="log">${S.log}</div><button class="btn ghost" onclick="endTurn()">End turn (alarm +${1+r.obs.filter(o=>!o.ok&&!o.loot&&o.t==='guard').length})</button>
+  <p class="dim">Draw ${S.draw.length} · discard ${S.disc.length} · moving rooms is free; ending a turn raises the alarm.</p>`;
+ }else{
+  const won=S.phase==='escaped';
+  h+=`<div class="room"><span class="dim">${won?'Clean getaway':'Busted in the '+cur().n}</span><span class="big">${won?'$'+S.loot:'$0'}</span>
+  <p>${S.turns} turns · alarm ${S.alarm}/${MAXA} · crew: ${S.crew.join(', ')}${S.newBest?' · new best on this job':''}</p></div>
+  <div class="log">${S.log}</div>
+  <div class="row"><button class="btn" onclick="share()">Copy result</button><button class="btn ghost" onclick="newRun(${S.seed})">Retry job</button></div>
+  <div class="row"><button class="btn ghost" onclick="newRun(Math.floor(Math.random()*1e8))">Random job</button>${S.daily?'':`<button class="btn ghost" onclick="newRun(today())">Daily job</button>`}</div>`;
+ }
+ app.innerHTML=h;
+}
+newRun(today());
+</script>
