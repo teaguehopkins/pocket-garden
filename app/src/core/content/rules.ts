@@ -36,6 +36,30 @@ const list: RuleDef[] = [
     preMul: (v) => (v.ctx.season === 2 && v.is(v.s, 'flower') ? 2 : 1) },
   { id: 'shelf', name: 'Seed Catalogue', text: 'Shelf holds 4 packets and you see 1 more ahead.', v5: true, p1: true },
   { id: 'heap', name: 'Compost Heap', text: 'Compost twice per season.', v5: true },
+  // Phase 1 rules (features.content). Keystones change how verbs or the bag work.
+  { id: 'runners', name: 'Runners', text: 'Spreading plants spread twice.', p1: true, keystone: true },
+  { id: 'swarm', name: 'Swarm', text: 'Tiles that grow stronger gain double.', p1: true, keystone: true },
+  { id: 'early', name: 'Early Season', text: 'Peaking species also double the season before their peak.', p1: true, keystone: true },
+  { id: 'seedswap', name: 'Seed Swap', text: 'Add 2 more packets of each species to your bag.', p1: true, keystone: true },
+  { id: 'shed', name: 'Tool Shed', text: 'One more tool use each season.', p1: true },
+  { id: 'marsh', name: 'Marsh', text: 'Frogs, Ducks and Reeds also count as water.', p1: true, keystone: true,
+    alsoIs: (x, t) => t === 'water' && (x === 'frog' || x === 'duck' || x === 'reeds') },
+  { id: 'fairy', name: 'Fairy Ring', text: 'Fungi also count as flowers.', p1: true, keystone: true,
+    alsoIs: (_x, t, g) => t === 'flower' && g === 'fungus' },
+  { id: 'wildflowers', name: 'Wildflowers', text: 'Plants also count as flowers.', p1: true, keystone: true,
+    alsoIs: (_x, t, g) => t === 'flower' && g === 'plant' },
+  { id: 'nest', name: 'Nest Boxes', text: 'Animals on the outer edge +2.', p1: true,
+    cellAdd: (v) => (v.group(v.s) === 'animal' && isEdge(v.ctx.board, v.i) ? 2 : 0) },
+  { id: 'quiet', name: 'Thicket', text: 'Tiles with no empty square beside them +1.', p1: true,
+    cellAdd: (v) => (v.empties() === 0 ? 1 : 0) },
+  { id: 'greenhouse', name: 'Greenhouse', text: 'Weather bonuses and penalties are doubled.', p1: true },
+  { id: 'bumper', name: 'Bumper Crop', text: 'Sunny squares score triple instead of double.', p1: true },
+  { id: 'monoculture', name: 'Allotment', text: '+3 for each species with 4 or more tiles.', p1: true,
+    bonus: (c) => {
+      const n = new Map<string, number>();
+      for (const id of realIds(c.grid)) n.set(id, (n.get(id) ?? 0) + 1);
+      return 3 * [...n.values()].filter((k) => k >= 4).length;
+    } },
 ];
 
 export function realIds(g: Grid): string[] {

@@ -291,7 +291,7 @@ function endSeason(s: RunState, A: Rng, B: Rng, ev: RunEvent[]) {
   ev.push({ type: 'seasonScored', season: s.season, score: sc, target, ok, cells });
   if (s.features.wishes)
     s.wishes.forEach((id, k) => {
-      if (!s.wishDone[k] && wishById(id).check(ctx, cells)) {
+      if (!s.wishDone[k] && wishById(id).check(ctx, cells, { season: s.season, score: sc, target })) {
         s.wishDone[k] = true;
         ev.push({ type: 'wish', id });
       }
@@ -331,7 +331,7 @@ export function seasonalLife(s: RunState, A: Rng): LifeChange[] {
   for (const [i, t] of tiles) {
     const v = SPECIES[t.s].verb;
     if (v?.kind === 'scale') {
-      const near = adj(s.board, i).some((j) => g[j] && SPECIES[g[j]!.s].group === v.when);
+      const near = adj(s.board, i).some((j) => g[j] && (SPECIES[g[j]!.s].group === v.when || !!SPECIES[g[j]!.s].also?.includes(v.when)));
       if (near) {
         const by = v.amount * (s.rules.includes('swarm') ? 2 : 1);
         g[i] = { ...g[i]!, b: (g[i]!.b ?? 0) + by };

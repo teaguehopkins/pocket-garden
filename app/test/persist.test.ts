@@ -31,7 +31,7 @@ function playOut(s: RunState, kv?: KV, stopAt = Infinity): RunState {
 }
 
 describe('save and resume', () => {
-  for (const [label, features] of [['v5', undefined]] as const) {
+  for (const [label, features] of [['v5', undefined], ['phase 1', P1_FEATURES]] as const) {
     it(`a run resumed from a save ends identically (${label})`, () => {
       const straight = playOut(newRun({ seed: 4242, features }));
       const kv = memKV();

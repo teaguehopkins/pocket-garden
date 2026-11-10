@@ -55,6 +55,8 @@ export interface CellView {
   rowCol(): string[];
   /** all real species ids in the garden */
   all(): string[];
+  /** empty plot squares orthogonally adjacent */
+  empties(): number;
 }
 
 export type Verb =
@@ -68,6 +70,8 @@ export interface SpeciesDef {
   name: string;
   icon: string;
   group: Group;
+  /** also counts as these groups (e.g. Cherry is a tree and a flower) */
+  also?: Group[];
   arch: Archetype[];
   text: string;
   score(v: CellView): number;

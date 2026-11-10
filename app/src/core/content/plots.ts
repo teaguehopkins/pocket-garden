@@ -15,7 +15,28 @@ export interface PlotDef {
   targets: [number, number, number];
 }
 
-export const PLOTS: PlotDef[] = [];
+export const PLOTS: PlotDef[] = [
+  { id: 'raised-bed', name: 'Raised Bed', twist: 'A plain square bed with one sunny spot.', targets: [16, 37, 64],
+    map: ['....', '.*..', '....', '....'] },
+  { id: 'pond-corner', name: 'Pond Corner', twist: 'An old pond fills one corner.', targets: [16, 37, 64],
+    map: ['PP...', 'P....', '.....', '.... '] },
+  { id: 'stone-path', name: 'Stone Path', twist: 'A path of stepping stones splits the bed.', targets: [16, 37, 64],
+    map: ['..#..', '..#..', '.....', '..#..'] },
+  { id: 'old-oak', name: 'The Old Oak', twist: 'A great oak already stands here, shading its neighbours.', targets: [16, 37, 64],
+    map: ['.....', '.O...', '.....', '...  '] },
+  { id: 'north-wall', name: 'North Wall', twist: 'A wall shades the back row; the front is in full sun.', targets: [16, 37, 64],
+    map: ['~~~~', '....', '....', '*..*'] },
+  { id: 'brook', name: 'The Brook', twist: 'A stream runs down one side.', targets: [16, 37, 64],
+    map: ['S....', 'S....', 'SS...', ' ....'] },
+  { id: 'long-border', name: 'Long Border', twist: 'A long, thin border: every square is on the edge.', targets: [16, 37, 64],
+    map: ['........', '........'] },
+  { id: 'corner-plot', name: 'Corner Plot', twist: 'An L-shaped plot round the corner of the house.', targets: [16, 37, 64],
+    map: ['..  ', '..  ', '....', '....', '....'] },
+  { id: 'sun-trap', name: 'Sun Trap', twist: 'Three sunny squares, but a stone in the middle.', targets: [16, 37, 64],
+    map: ['*...', '.#..', '...*', '..*.', '.   '] },
+  { id: 'lily-pond', name: 'Lily Pond', twist: 'A pond in the middle of the garden.', targets: [16, 37, 64],
+    map: ['.....', '.PP..', '.....', '...  '] },
+];
 
 export function parsePlot(p: PlotDef): { board: Board; grid: Grid } {
   const h = p.map.length, w = Math.max(...p.map.map((r) => r.length));

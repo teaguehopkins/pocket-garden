@@ -26,6 +26,7 @@ export function makeIs(ctx: ScoreCtx, rules = activeRules(ctx)) {
     const g = SPECIES[x].group;
     if (g === 'none') return false;
     if (g === t) return true;
+    if (SPECIES[x].also?.includes(t)) return true;
     for (const r of extra) if (r.alsoIs!(x, t, g)) return true;
     return false;
   };
@@ -56,6 +57,7 @@ export function cellView(ctx: ScoreCtx, i: number, rules = activeRules(ctx), is 
       return [...row, ...col].map((j) => grid[j]).filter(isReal).map((t) => t.s);
     },
     all: () => (allCache ??= grid.filter(isReal).map((t) => t.s)),
+    empties: () => adj(board, i).filter((j) => !grid[j]).length,
   };
 }
 
@@ -65,12 +67,12 @@ export function cellScore(ctx: ScoreCtx, i: number, rules = activeRules(ctx), is
   const sp = SPECIES[v.s];
   let x = speciesScoreFn(sp, ctx)(v);
   for (const r of rules) if (r.preMul) x *= r.preMul(v);
-  if (ctx.features.life && sp.verb?.kind === 'peak' && sp.verb.season === ctx.season) x *= 2;
-  if (ctx.weather) x += WEATHER[ctx.weather].add(sp.group);
+  if (ctx.features.life && sp.verb?.kind === 'peak' && (sp.verb.season === ctx.season || (ctx.rules.has('early') && sp.verb.season === ctx.season + 1))) x *= 2;
+  if (ctx.weather) x += WEATHER[ctx.weather].add(sp.group) * (ctx.rules.has('greenhouse') ? 2 : 1);
   for (const r of rules) if (r.cellAdd) x += r.cellAdd(v);
   if (v.tile.b) x += v.tile.b;
   for (const r of rules) if (r.postMul) x *= r.postMul(v);
-  if (ctx.board.fx[i] === 'sunny') x *= 2;
+  if (ctx.board.fx[i] === 'sunny') x *= ctx.rules.has('bumper') ? 3 : 2;
   return x;
 }
 
