@@ -31,9 +31,24 @@
   function plant(id: string) {
     if (current && confirmFor !== id) { confirmFor = id; return; }
     confirmFor = null;
-    id === 'daily' ? game.startDaily() : game.startPlot(id);
+    if (id === 'friend' && game.challenge) game.startChallenge(game.challenge);
+    else if (id === 'daily') game.startDaily();
+    else game.startPlot(id);
   }
+  const ch = $derived(game.challenge);
 </script>
+
+{#if ch}
+  <section class="card friend" aria-label="A friend's garden">
+    <b>A friend shared a garden</b>
+    <p>{ch.daily ? "Today's garden" : plotName(ch.plot)}: they {ch.won ? 'bloomed all year' : 'got'} with <b>{ch.score}</b> points. Same seeds, same weather. Can you beat it?</p>
+    <p class="dim">Friends' gardens don't change your Lane.</p>
+    <div class="row">
+      <button class="btn" onclick={() => plant('friend')}>{confirmFor === 'friend' ? 'Replace current?' : 'Play it'}</button>
+      <button class="btn ghost" onclick={() => (game.challenge = null)}>Not now</button>
+    </div>
+  </section>
+{/if}
 
 <section class="card summary">
   <div class="totals">
@@ -101,6 +116,9 @@
 
 <style>
   .summary { display: flex; flex-direction: column; gap: 8px; }
+  .friend { display: flex; flex-direction: column; gap: 6px; box-shadow: var(--shadow), inset 0 0 0 3px var(--verb); }
+  .friend > b { font: 600 var(--fs-l) var(--font-display); color: var(--verb); }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .totals { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
   .big { font: 700 var(--fs-xl) var(--font-display); }
   .next { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }

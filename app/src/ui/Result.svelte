@@ -10,7 +10,7 @@
   import Tile from '../art/Tile.svelte';
   import Board from './Board.svelte';
   import { game } from './game.svelte';
-  import { ruleName } from './text';
+  import { gardenUrl, shareGarden } from './share';
 
   let { run }: { run: RunState } = $props();
   const won = $derived(run.phase === 'won');
@@ -22,19 +22,28 @@
     !!lane && (lane.newWishes.length > 0 || lane.plotOpened !== null || lane.unlocked.length > 0 || lane.plotBest || lane.tutorialDone || game.runAchievements.length > 0),
   );
 
-  function share() {
-    const s = run;
-    const w = s.board.w;
-    const map = s.grid.map((t, i) => (!s.board.mask[i] ? '⬜' : t ? SPECIES[t.s].icon : '🟫'));
-    let rows = '';
-    for (let r = 0; r < s.board.h; r++) rows += map.slice(r * w, r * w + w).join('') + '\n';
-    const where = s.daily ? `daily ${s.seed}` : plot ? plot.name : `rank ${s.rank}`;
-    const txt = `Pocket Garden · ${where}\n${won ? 'Bloomed ' + '★'.repeat(s.stars ?? 0) : 'Wilted'} · ${s.banked} pts (${s.results.join(' / ')})\nRules: ${s.rules.map(ruleName).join(', ')}\n${rows}`;
-    navigator.clipboard?.writeText(txt).then(
-      () => (game.note = 'Copied your garden. Paste it anywhere.'),
-      () => (game.note = txt),
-    );
+  let sharing = $state(false);
+  let image = $state<string | null>(null);
+  async function share() {
+    sharing = true;
+    game.note = '';
+    try {
+      const r = await shareGarden(run);
+      image = r.image ?? null;
+      game.note = r.result === 'copied' ? 'Copied your garden and its link. Paste it to a friend.' : r.result === 'image' ? 'Save the picture below and send it with the link.' : '';
+    } finally {
+      sharing = false;
+    }
   }
+  async function copyLink() {
+    try {
+      await navigator.clipboard.writeText(gardenUrl(run));
+      game.note = 'Link copied. Anyone who opens it gets the same garden.';
+    } catch {
+      game.note = gardenUrl(run);
+    }
+  }
+  const friend = $derived(game.playingChallenge);
 </script>
 
 <section class="card result" data-testid="result">
@@ -48,6 +57,12 @@
     {#if !won && run.wishDone.some(Boolean)}<p class="dim">Wishes only count in a year that blooms.</p>{/if}
   {/if}
 </section>
+
+{#if friend}
+  <p class="card versus" class:beat={run.banked > friend.score}>
+    {run.banked > friend.score ? `You beat your friend's ${friend.score}!` : run.banked === friend.score ? `A tie with your friend's ${friend.score}.` : `Your friend scored ${friend.score}. ${friend.score - run.banked} more next time.`}
+  </p>
+{/if}
 
 <Board {run} weather={false} />
 
@@ -71,8 +86,12 @@
   <button class="btn" onclick={() => (game.view = 'lane')}>Back to the Lane</button>
   <button class="btn ghost" onclick={() => game.replay()}>Replay this seed</button>
 </div>
-<button class="btn ghost" onclick={share}>Copy garden</button>
+<div class="row">
+  <button class="btn ghost" onclick={share} disabled={sharing}>{sharing ? 'Drawing…' : 'Share garden'}</button>
+  <button class="btn ghost" onclick={copyLink}>Copy link</button>
+</div>
 {#if game.note}<p class="dim note">{game.note}</p>{/if}
+{#if image}<a class="shot" href={image} download="pocket-garden.png"><img src={image} alt="Your finished garden" /><span>Save picture</span></a>{/if}
 
 <style>
   .result { display: flex; flex-direction: column; gap: 6px; text-align: center; align-items: center; animation: rise var(--t-slow) var(--ease-pop); }
@@ -89,7 +108,11 @@
   .new { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
   .sp { display: inline-flex; flex-direction: column; align-items: center; font-size: var(--fs-xs); }
   .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .note { white-space: pre-wrap; text-align: center; }
+  .note { white-space: pre-wrap; text-align: center; overflow-wrap: anywhere; }
+  .versus { text-align: center; font: 600 var(--fs-m) var(--font-display); }
+  .versus.beat { color: var(--good); }
+  .shot { display: flex; flex-direction: column; align-items: center; gap: 6px; font: 600 var(--fs-s) var(--font-display); color: var(--ink); }
+  .shot img { width: 60%; border-radius: var(--r-m); box-shadow: var(--shadow); }
   .resting { text-align: center; font-family: var(--font-display); color: var(--ink-dim); margin-top: 6px; }
   @keyframes rise { from { transform: translateY(16px) scale(0.97); opacity: 0; } }
 </style>

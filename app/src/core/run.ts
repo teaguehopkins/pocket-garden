@@ -40,6 +40,10 @@ export interface RunConfig {
   draftSize?: number;
   /** fixed offers, weather and targets for the teaching garden */
   script?: RunScript;
+  /** opened from a friend's link: plays the same garden but doesn't touch the Lane */
+  shared?: boolean;
+  /** Lane star total that set `pool` (for share links) */
+  poolStars?: number;
 }
 
 export interface Pool {
@@ -95,6 +99,8 @@ export interface RunState {
   per?: number;
   draftSize?: number;
   script?: RunScript | null;
+  shared?: boolean;
+  poolStars?: number | null;
 }
 
 export type LifeChange =
@@ -178,7 +184,7 @@ export function newRun(cfg: RunConfig): RunState {
     plot, board, targets, mods, roster: [], offer: [], ruleOffer: [], rules: [], queue: [], bag: [],
     grid, season: 0, placed: 0, results: [], banked: 0, phase: 'draft', last: -1, rerolls: 0, stars: null,
     wishes: [], wishDone: [], changes: [],
-    pool: cfg.pool ?? null, per: cfg.per, draftSize: cfg.draftSize, script: cfg.script ?? null,
+    pool: cfg.pool ?? null, per: cfg.per, draftSize: cfg.draftSize, script: cfg.script ?? null, shared: !!cfg.shared, poolStars: cfg.poolStars ?? null,
   };
   if (cfg.script?.targets) s.targets = [...cfg.script.targets];
   withRng(s, (_A, B) => {

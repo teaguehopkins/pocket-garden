@@ -1,6 +1,8 @@
 import { apply, newRun, type Action, type LifeChange, type RunEvent, type RunState } from '../core/run';
-import { addAchievements, currentPool, markMet, recordRun, recordSeason, type LaneChange, type Profile } from '../core/profile';
-import { PLOT_WISHES, teachingRun } from '../core/content/progress';
+import { addAchievements, currentPool, laneStars, markMet, recordRun, recordSeason, type LaneChange, type Profile } from '../core/profile';
+import { PLOT_WISHES, poolAt, teachingRun } from '../core/content/progress';
+import { decodeLink, type GardenLink } from '../core/link';
+import type { SaveBundle } from '../savecode';
 import { earned } from '../core/content/achievements';
 import { PLOTS } from '../core/content/plots';
 import { total } from '../core/score';
@@ -75,14 +77,19 @@ class Game {
   lane = $state.raw<LaneChange | null>(null);
   /** achievements earned during the current run */
   runAchievements = $state<string[]>([]);
+  /** a friend's garden opened from a link, waiting to be played */
+  challenge = $state.raw<GardenLink | null>(null);
+  /** the friend's garden the current run is replaying */
+  playingChallenge = $state.raw<GardenLink | null>(null);
   /** drag-to-plant: square under the finger */
   dragOver = $state<number | null>(null);
 
   constructor() {
     const saved = loadRun(kv);
     if (saved) this.run = saved;
-    if (live(saved)) this.view = 'run';
-    else if (!this.profile.tutorialDone) this.startTeaching();
+    this.challenge = readLinkFromUrl();
+    if (live(saved)) this.view = this.challenge ? 'lane' : 'run';
+    else if (!this.profile.tutorialDone && !this.challenge) this.startTeaching();
     void requestPersistence();
   }
 
@@ -104,6 +111,7 @@ class Game {
     this.sheet = null;
     this.lane = null;
     this.runAchievements = [];
+    this.playingChallenge = null;
     this.view = 'run';
     this.profile = markMet(this.profile, r);
     saveProfile(kv, this.profile);
@@ -118,12 +126,38 @@ class Game {
       plot: f.plots ? plot : undefined,
       wishes: f.plots ? PLOT_WISHES[plot] : undefined,
       pool: f.content ? currentPool(this.profile) : undefined,
+      poolStars: laneStars(this.profile),
     }));
   }
 
   /** Today's garden: the same for everyone, full pool, any plot. */
   startDaily(seed = today()) {
     this.begin(newRun({ seed, daily: true, features: $state.snapshot(this.features) }));
+  }
+
+  /** Play a friend's garden: same plot, seed, pool and rules; it doesn't touch the Lane. */
+  startChallenge(l: GardenLink) {
+    this.begin(newRun({
+      seed: l.seed, daily: l.daily, features: l.features, shared: !l.daily,
+      plot: l.plot ?? undefined,
+      wishes: l.plot && l.features.plots ? PLOT_WISHES[l.plot] : undefined,
+      pool: l.stars !== null ? poolAt(l.stars) : undefined,
+      poolStars: l.stars ?? undefined,
+    }));
+    this.playingChallenge = l;
+    this.challenge = null;
+  }
+
+  /** Replace everything with a restored save. */
+  restore(b: SaveBundle) {
+    this.profile = { ...b.profile };
+    saveProfile(kv, this.profile);
+    this.run = b.run;
+    saveRun(kv, b.run);
+    this.tally = null;
+    this.sheet = null;
+    this.lane = null;
+    this.view = live(b.run) ? 'run' : 'lane';
   }
 
   startTeaching() {
@@ -142,6 +176,8 @@ class Game {
     if (!r) return;
     if (r.daily) this.startDaily(r.seed);
     else if (r.plot === 'window-box') this.startTeaching();
+    else if (this.playingChallenge) this.startChallenge(this.playingChallenge);
+    else if (r.shared) this.startChallenge({ seed: r.seed, plot: r.plot, daily: false, stars: r.poolStars ?? null, features: r.features, score: 0, won: false });
     else if (r.plot) this.startPlot(r.plot, r.seed);
     else this.start(r.seed, false);
   }
@@ -192,6 +228,21 @@ class Game {
 
   closeTally() {
     this.tally = null;
+  }
+}
+
+/** A friend's garden from `?g=`, removed from the address bar once read. */
+function readLinkFromUrl(): GardenLink | null {
+  try {
+    const params = new URLSearchParams(location.search);
+    const code = params.get('g');
+    if (!code) return null;
+    params.delete('g');
+    const q = params.toString();
+    history.replaceState(null, '', location.pathname + (q ? `?${q}` : '') + location.hash);
+    return decodeLink(code);
+  } catch {
+    return null;
   }
 }
 

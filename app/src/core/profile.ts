@@ -165,7 +165,7 @@ export function recordRun(p0: Profile, s: RunState): RunOutcome {
   let newWishes: string[] = [];
   let plotBest = false;
   const plotWishes = s.plot ? PLOT_WISHES[s.plot] : undefined;
-  if (s.plot && plotWishes && !s.daily) {
+  if (s.plot && plotWishes && !s.daily && !s.shared) {
     const r = (p.lane[s.plot] ??= emptyPlot());
     if (won) {
       r.blooms++;

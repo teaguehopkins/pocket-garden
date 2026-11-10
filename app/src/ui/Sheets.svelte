@@ -9,7 +9,8 @@
   import Sheet from './Sheet.svelte';
   import { game } from './game.svelte';
   import { saveSettings, settings } from './settings.svelte';
-  import { favouritePair } from '../core/profile';
+  import { favouritePair, type Profile } from '../core/profile';
+  import { exportCode, importCode } from '../savecode';
   import { spText, verbGlyph, verbText } from './text';
 
   let { run: maybeRun }: { run: RunState | null } = $props();
@@ -23,6 +24,29 @@
     for (const k of run.bag) m.set(k, (m.get(k) ?? 0) + 1);
     return [...m];
   });
+  let code = $state('');
+  let incoming = $state('');
+  let loadMsg = $state('');
+  let confirmLoad = $state(false);
+  async function makeCode() {
+    code = await exportCode({ v: 1, profile: $state.snapshot(game.profile) as Profile, run: game.run });
+  }
+  async function copyCode() {
+    try { await navigator.clipboard.writeText(code); loadMsg = 'Save code copied.'; } catch { loadMsg = 'Select the code above and copy it.'; }
+  }
+  async function loadCode() {
+    try {
+      const b = await importCode(incoming);
+      if (!confirmLoad) { confirmLoad = true; loadMsg = `This save has ${b.profile.runs} gardens. Loading it replaces this phone's progress.`; return; }
+      game.restore(b);
+      incoming = '';
+      confirmLoad = false;
+      loadMsg = 'Save loaded.';
+    } catch (e) {
+      confirmLoad = false;
+      loadMsg = (e as Error).message;
+    }
+  }
   const FEATURE_LABELS: [keyof Features, string][] = [
     ['bag', 'Seed bag'], ['life', 'Seasonal life'], ['plots', 'Plots'], ['tools', 'Tools'], ['wishes', 'Wishes'], ['content', 'New species and rules'],
   ];
@@ -87,6 +111,17 @@
         {/each}
       </div>
       <button class="btn ghost" onclick={() => game.start(Math.floor(Math.random() * 1e8), false)}>Start a new garden now</button>
+      <h3>Save code</h3>
+      <p class="dim">Your progress lives on this device. Copy a save code somewhere safe, or paste one to move your garden to another phone.</p>
+      {#if code}
+        <textarea readonly rows="4" aria-label="Your save code" onfocus={(e) => (e.currentTarget as HTMLTextAreaElement).select()}>{code}</textarea>
+        <button class="btn ghost" onclick={copyCode}>Copy save code</button>
+      {:else}
+        <button class="btn ghost" onclick={makeCode}>Make a save code</button>
+      {/if}
+      <textarea rows="3" placeholder="Paste a save code here" aria-label="Paste a save code" bind:value={incoming}></textarea>
+      {#if loadMsg}<p class="dim" role="status">{loadMsg}</p>{/if}
+      <button class="btn ghost" disabled={!incoming.trim()} onclick={loadCode}>{confirmLoad ? 'Replace everything on this phone?' : 'Load this save'}</button>
       <p class="dim">{game.profile.runs} gardens · {game.profile.years} full years · {game.profile.stars} ★ · best {game.profile.best}</p>
     {/if}
   </Sheet>
@@ -113,4 +148,5 @@
   .seg label { display: flex; align-items: center; gap: 6px; min-height: 40px; }
   .lab { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; }
   .lab .toggle { font-size: var(--fs-s); }
+  textarea { width: 100%; font: 12px/1.4 ui-monospace, monospace; border-radius: var(--r-s); border: 1.5px solid var(--line); background: var(--surface-2); color: var(--ink); padding: 8px; resize: vertical; overflow-wrap: anywhere; }
 </style>
