@@ -68,7 +68,8 @@ export function simChunk(a: SimArgs, botName: string, from: number, to: number):
     const seed = seedFor(a.seed0, i) % 1e8;
     const plot = a.plots ? a.plots[i % a.plots.length] : undefined;
     let s = newRun({ seed, rank: a.rank, features: a.features, plot });
-    if (plot && a.targets?.[plot]) s = { ...s, targets: [...a.targets[plot]] };
+    const t = a.targets?.[plot ?? '*'];
+    if (t) s = { ...s, targets: [...t] };
     const end = playRun(bot, s, seed ^ 0x1234567);
     out.push({
       bot: botName, plot: end.plot, won: end.phase === 'won', results: end.results, targets: end.targets,
@@ -172,6 +173,7 @@ function parseArgs(argv: string[]): SimArgs {
     out: argv.includes('--out'),
     species: argv.includes('--species'),
     seed0: Number(get('seed', '20261110')),
+    targets: get('targets', '') ? { '*': get('targets', '').split('/').map(Number) } : undefined,
   };
 }
 

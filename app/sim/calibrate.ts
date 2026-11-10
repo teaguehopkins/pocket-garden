@@ -17,11 +17,12 @@ const get = (k: string, d: string) => {
 };
 const n = Number(get('n', '600'));
 const goal = Number(get('greedy', '0.3'));
-const plots = PLOTS.map((p) => p.id);
+const features = parseFeatures(get('features', 'p1'));
+const plots = features.plots ? PLOTS.map((p) => p.id) : ['*'];
 
 const a: SimArgs = {
-  n: n * plots.length, bots: ['greedy'], features: parseFeatures(get('features', 'p1')), featureLabel: get('features', 'p1'),
-  rank: 1, plots, label: 'calibrate', out: false, species: false, seed0: 777,
+  n: n * plots.length, bots: ['greedy'], features, featureLabel: get('features', 'p1'),
+  rank: 1, plots: features.plots ? plots : null, label: 'calibrate', out: false, species: false, seed0: 777,
   targets: Object.fromEntries(plots.map((p) => [p, [0, 0, 0]])),
 };
 const recs = await simulate(a);
@@ -33,7 +34,7 @@ const quant = (xs: number[], q: number) => {
 
 const found: Record<string, number[]> = {};
 for (const p of plots) {
-  const rs = recs.filter((r) => r.plot === p).map((r) => r.results);
+  const rs = recs.filter((r) => (r.plot ?? '*') === p).map((r) => r.results);
   let best: { q: number; t: number[]; rate: number } | null = null;
   for (let q = 0.05; q <= 0.95; q += 0.005) {
     const t = [0, 1, 2].map((k) => quant(rs.map((r) => r[k]), q));
@@ -44,7 +45,7 @@ for (const p of plots) {
   console.log(`${p.padEnd(12)} targets ${best!.t.join('/')}  greedy ≈ ${Math.round(best!.rate * 100)}%  (season quantile ${best!.q.toFixed(2)})`);
 }
 
-if (argv.includes('--write')) {
+if (argv.includes('--write') && features.plots) {
   const file = resolve(dirname(fileURLToPath(import.meta.url)), '../src/core/content/plots.ts');
   let src = readFileSync(file, 'utf8');
   for (const [p, t] of Object.entries(found)) {
