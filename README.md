@@ -31,7 +31,7 @@ npm run sim:calibrate -- --n 600 --greedy 0.3 --write   # set plot targets
 
 ## Publishing
 
-Every push to `main` on GitHub runs `.github/workflows/pages.yml`: install, unit tests, build, deploy `app/dist` to GitHub Pages. The build uses relative paths, so it works under `/<repo>/`. The service worker updates the installed app quietly on the next launch.
+Live at https://garden.zenwombat.com/ (GitHub Pages custom domain; DNS: `CNAME garden.zenwombat.com → teaguehopkins.github.io`). Every push to `main` on the `github` remote runs `.github/workflows/pages.yml`: install, unit tests, build, deploy `app/dist`. The build uses relative paths, so it also works under a `/<repo>/` path. The service worker updates the installed app quietly on the next launch.
 
 ## Prototypes
 

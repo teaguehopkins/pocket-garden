@@ -66,7 +66,7 @@ Art direction: **B, Clay Diorama** (chosen 2026-11-10).
 
 ## Phase 4: Ship and share (done, live)
 
-Live at https://teaguehopkins.github.io/pocket-garden/ (repo: github.com/teaguehopkins/pocket-garden; every push to `main` deploys).
+Live at https://garden.zenwombat.com/ (repo: github.com/teaguehopkins/pocket-garden; every push to `main` deploys).
 
 - [x] Installable PWA: manifest, icons, service worker; plays fully offline (tested on the live site)
 - [x] "Beat my garden" links: same plot, seed, pool and rules; friends' gardens don't touch the Lane
