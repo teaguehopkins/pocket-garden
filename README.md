@@ -29,6 +29,10 @@ npm run sim:calibrate -- --n 600 --greedy 0.3 --write   # set plot targets
 - `test/parity/`: `extract-v5.mjs` runs `prototypes/garden.html` headless to produce fixtures; the engine must match them exactly (`npm run fixtures` regenerates).
 - `art-mocks/`: the art-direction comparison page (style B, Clay Diorama, was chosen).
 
+## Publishing
+
+Every push to `main` on GitHub runs `.github/workflows/pages.yml`: install, unit tests, build, deploy `app/dist` to GitHub Pages. The build uses relative paths, so it works under `/<repo>/`. The service worker updates the installed app quietly on the next launch.
+
 ## Prototypes
 
 Single-file HTML prototypes, open in a browser to play.
