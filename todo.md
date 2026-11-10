@@ -1,32 +1,47 @@
-# Pocket Garden — next steps
+# Pocket Garden: checklist
 
-## Playtest v5 (draft + rule cards)
+See `PLAN.md` for the phases. Sim numbers live in `app/sim/results/`.
 
-Play 5–10 Journey runs and a few Daily runs. Note:
+## Phase 0: Foundation (done)
 
-- [ ] **Build identity:** do you start a run thinking "I'm going frog-and-water" (or similar) during the draft?
-- [ ] **Rule picks:** does any rule feel exciting or broken in a fun way? Which ones are never worth taking?
-- [ ] **Difficulty:** where do you stall (rank)? Targets are 16/37/64 at rank 1, +3% per rank. Sims put random play at ~63 Autumn and thoughtful drafting at ~73, so it may still be too easy.
-- [ ] **Boredom check:** after how many runs does it get stale? Is that later than v4?
-- [ ] **Queue:** do you still plan around the coming-up packets?
-- [ ] **Daily:** does the star rating make you want to replay the same seed?
-- [ ] **Session length:** does a full run still fit a playground break and survive being put down mid-run?
+- [x] Vite + TypeScript + Svelte 5 app in `app/`
+- [x] Pure engine matching v5 exactly (600 boards, 80 full runs, RNG streams)
+- [x] Save after every action; resume on load; profile migrated from `pg2-profile`
+- [x] Bots (random, greedy, planner) and `npm run sim`; v5 baseline recorded
+- [x] Minimal UI; e2e full run at 360px in light and dark with a reload mid-run
+- [ ] **You:** play on a phone and kill the tab mid-run; check it resumes
 
-## Balance and content (after playtest)
+## Phase 1: Depth and variety (built, needs your playtest)
 
-- [ ] Retune targets from real results, not just bot sims.
-- [ ] Cut or buff rules nobody picks; nerf ones that win every time.
-- [ ] Check species that are dead picks (likely candidates: Snail, Moss, Truffle without Oak).
-- [ ] Consider varied plot shapes or pre-placed features (water edge, shaded corner) for more run-to-run variety.
-- [ ] Re-check rank rules (rock at 3, shorter preview at 5, no compost at 7) for fun vs. friction.
+All mechanics are on by default for new gardens. The Lab section at the bottom of the screen toggles each one, so you can compare against v5.
 
-## Product questions (later)
+- [x] Seed bag (18 packets, bag view)
+- [x] Seasonal life: grow, spread, grow stronger, peak; "later" marks
+- [x] 10 plots with features
+- [x] Tools: Compost, Trowel, Replant
+- [x] Rules: 13 new, including keystones
+- [x] Wishes: 12, three per run, stars from wishes
+- [x] 13 new species; Snail, Moss, Truffle revised
+- [x] Plot targets calibrated by sim
 
-- [ ] Save an in-progress run so closing the tab doesn't lose it.
-- [ ] Turn into an installable offline PWA (manifest + service worker; can't run inside the artifact viewer, needs its own hosting).
-- [ ] Shareable progress beyond copy-text: share link with seed, or a result image.
-- [ ] Cross-device progress sync (currently localStorage only).
-- [ ] Onboarding: first run with a fixed, teaching draft.
+### Playtest (15+ runs)
+
+- [ ] **One more run:** after 15 runs, do you still want another?
+- [ ] **Builds:** can you name distinct builds you went for (e.g. "acorn grove", "clover carpet", "frog marsh")?
+- [ ] **Planning:** do you plant for "later" payoffs over the biggest number? Does that feel good or fiddly?
+- [ ] **Bag:** do you check the bag? Does knowing what's left change your choices?
+- [ ] **Tools:** which do you use? Is one tool per season right?
+- [ ] **Wishes:** do they change your draft? Any that are never possible or always free?
+- [ ] **Plots:** which plots feel different? Which feel the same as Raised Bed?
+- [ ] **Difficulty:** which plots do you win or lose? (targets are set so a greedy bot wins about 30%)
+- [ ] **Rules:** any never worth taking, or always taken?
+- [ ] **Readability:** can you tell at a glance what each tile does now that there are more species?
+
+## Phase 2: Look and feel (next)
+
+- [ ] **You:** pick an art direction from the mocks (A Seed Packet, B Clay Diorama, C Sun Print)
+- [ ] Design tokens and full SVG tile set
+- [ ] Living board, sequenced scoring tally, touch feel, sound and haptics, layout pass
 
 ## Parked
 

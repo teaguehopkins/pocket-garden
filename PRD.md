@@ -1,6 +1,6 @@
 # Pocket Garden — Product Requirements
 
-*Status: draft · Last updated 2026-11-10 · Prototype: `prototypes/garden.html` (v5)*
+*Status: draft · Last updated 2026-11-10 · App: `app/` (Phase 1 mechanics in playtest) · Prototype: `prototypes/garden.html` (v5)*
 
 ## 1. Summary
 
@@ -47,30 +47,36 @@ The opportunity is the depth of a draft-and-synergy game with none of the time p
 1. **Plan, don't react.** Show the player what is coming (packet queue, season weather) so success comes from planning rather than luck. *Learned from playtests: random offers made planning "a crap shoot"; the visible queue fixed it.*
 2. **Every run is a new puzzle.** Variety comes from the draft and the rules, not only from higher numbers. *Learned from playtests: rising targets alone became boring.*
 3. **Combos you discover.** The core thrill is finding synergies and rule-breaking combinations.
-4. **Readable at a glance.** Icons, short rule text, and a live score preview on every square. Glance, think, tap.
+4. **Readable at a glance.** Icons, short rule text, and a live preview on every square showing *this season's* change. Delayed payoffs (growth, spreading, peaks) are marked "later", not computed, so planning beats chasing the biggest number. Glance, think, tap.
 5. **Hard but fair.** Thoughtful play should beat a greedy strategy. Difficulty is tuned with simulated bots, then checked against real play.
+6. **Joy, not compulsion.** No streaks that can be lost, no timers or energy, no nagging notifications, no random-reward unlocks, no ads or FOMO. Unlocks come at a fixed pace from play. Every year ends at a natural stopping point (a calm "garden is resting" screen) rather than an auto-started next run. Missing a daily costs nothing.
 
 ## 6. Core loop
 
 One run is a "garden year", targeting about 5–10 minutes in total:
 
-1. **Draft.** Pick 6 of 19 species, one at a time from 3 offers. All three seasons' weather is visible while drafting. Only drafted species appear during the run.
-2. **First rule.** Pick 1 of 3 rule cards (e.g. "Animals also count diagonal neighbours").
-3. **Plant a season.** Plant 5 packets on a 4×4 plot. Choose from a shelf of 3, with the next 3 visible in a queue. Each empty square shows how much the season's score would change. Composting replaces the shelf once per season.
-4. **Score the season.** The whole garden is scored under that season's weather and active rules, and must meet the target. Missing it ends the run.
-5. **Repeat** for Summer and Autumn, picking a new rule card after each season cleared. The garden carries over; rules stack.
-6. **Result.** Total score, 1–3 stars based on the margin over Autumn's target, rank change, share card.
+1. **Plot and wishes.** Each run is on a plot (14–20 squares, with features such as a pond, an old oak, stepping stones, sunny squares or a shading wall) and shows 3 optional wishes (e.g. "a full row of flowers").
+2. **Draft.** Pick 6 of ~32 species, one at a time from 3 offers. All three seasons' weather is visible while drafting. The draft fills a seed bag with 3 packets of each species.
+3. **First rule.** Pick 1 of 3 rule cards (e.g. "Animals also count diagonal neighbours", or keystones like "Spreading plants spread twice").
+4. **Plant a season.** Plant 5 packets. Choose from a shelf of 3 drawn from the bag, with the next 3 visible; the bag's remaining contents are always visible. Each empty square shows this season's change. One tool use per season: Compost (swap the shelf back into the bag), Trowel (move a tile) or Replant (plant over a tile).
+5. **Score the season.** The whole garden is scored under that season's weather and active rules, and must meet the target. Missing it ends the run. Then the garden lives: Acorns grow into Oaks, Clover and Reeds spread, Bees and Squirrels grow stronger, and peaking species double in their season.
+6. **Repeat** for Summer and Autumn, picking a new rule card after each season cleared. The garden carries over; rules stack.
+7. **Result.** Total score, one star per wish granted, share card, then a resting screen. Nothing starts until the player chooses.
 
 ### Key systems
 
-- **Species:** 19 species across 6 types (tree, plant, fungus, flower, animal, water). Scoring depends on neighbours, rows/columns or the whole garden.
+- **Species:** ~32 species across 6 types (tree, plant, fungus, flower, animal, water) and four archetypes (wetland, woodland, meadow, wildlife). Scoring depends on neighbours, rows/columns or the whole garden. About half have a time verb: *grow*, *spread*, *grow stronger* or *peak*.
 - **Weather:** one modifier per season (e.g. "Water +2 each"), shown from the start.
-- **Rule cards:** 14 rules that change scoring or the shelf. 3 per run, stacking.
-- **Packet queue:** a shelf plus a visible preview, so the player can set up for packets that are coming.
+- **Rule cards:** ~26 rules that change scoring, verbs, the bag or tools. 3 per run, stacking.
+- **Seed bag:** 18 packets (3 per drafted species), 15 planted per year, so luck is bounded and countable.
+- **Plots:** 10 layouts with pre-placed features, each with its own targets.
+- **Tools:** one use per season of Compost, Trowel or Replant.
+- **Wishes:** 3 optional goals per run; stars come from wishes.
+- The original v5 rules remain available (all Phase 1 features off) for comparison.
 
 ## 7. Progression and replayability
 
-- **Journey mode:** random seed. Ranks 1–10; each year won ranks up. Higher ranks raise targets 3% and add constraints (rock at rank 3, shorter preview at 5, no composting at 7).
+- **Journey mode:** random seed. Each year won ranks up and moves to the next plot (Phase 3 turns this into *the Lane*: a street of plots, each keeping a miniature of your best garden there). In v5 mode, higher ranks raise targets 3% and add constraints (rock at rank 3, shorter preview at 5, no composting at 7).
 - **Daily garden:** same seed, weather, draft and rule offers for everyone that day, so results are comparable.
 - **Stars and records:** stars per year, best score per seed, lifetime totals.
 - **Future:** collection and discovery (species and rules unlocked or catalogued over time), achievements for specific combos, and a persistent garden or map that grows across runs.
@@ -116,12 +122,14 @@ For launch, measured with analytics:
 
 ## 12. Roadmap
 
-1. **Playtest v5** (see `todo.md`) and retune.
-2. **Content pass:** cut/buff rules and species; trial plot variations.
-3. **Resilience:** save in-progress runs; first-run onboarding with a teaching draft.
-4. **PWA:** installable offline build with its own hosting.
-5. **Sharing:** seed links and result images.
-6. **Meta-progression:** collection, achievements, persistent garden.
+See `PLAN.md` for detail.
+
+0. **Foundation (done):** app in `app/` with a pure engine matching v5 exactly, saves after every action, bot sims.
+1. **Depth and variety (in playtest):** seed bag, seasonal life, plots, tools, rules overhaul, wishes, new species, retuned targets.
+2. **Look and feel:** chosen art direction, custom SVG tiles, living board, sequenced scoring, sound and haptics.
+3. **Long-term progress:** the Lane, Almanac, achievements, onboarding, rest screen.
+4. **Ship and share:** PWA, seed links, result images, save codes, daily garden.
+5. **Tune with real players.**
 
 ## Appendix: explored alternatives
 

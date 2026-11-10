@@ -11,7 +11,8 @@
     "test": "vitest run",
     "fixtures": "node test/parity/extract-v5.mjs",
     "sim": "tsx sim/cli.ts",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "sim:calibrate": "tsx sim/calibrate.ts"
   },
   "devDependencies": {
     "@playwright/test": "^1.65.0",
