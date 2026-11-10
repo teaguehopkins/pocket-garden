@@ -88,7 +88,7 @@ One run is a "garden year", targeting about 5–10 minutes in total:
 ## 8. Sharing
 
 - **Now:** copy a text summary: mode/seed, result, stars, rules and an emoji grid of the garden.
-- **Planned:** a share link that opens the same seed ("beat my garden"), a result image, and an optional friends leaderboard for the daily.
+- **Built:** a share link that opens the same garden ("beat my garden") and a result image of the board. **Later:** an optional friends leaderboard for the daily.
 - Sharing must work without accounts; anything that needs accounts is optional.
 
 ## 9. Platform and technical requirements
@@ -132,7 +132,7 @@ See `PLAN.md` for detail.
 1. **Depth and variety (in playtest):** seed bag, seasonal life, plots, tools, rules overhaul, wishes, new species, retuned targets.
 2. **Look and feel (built):** Clay Diorama art direction, custom SVG tiles, living board, sequenced scoring, sound and haptics.
 3. **Long-term progress (built):** the Lane, Almanac, achievements, onboarding, rest screen.
-4. **Ship and share:** PWA, seed links, result images, save codes, daily garden.
+4. **Ship and share (live):** PWA on GitHub Pages, seed links, result images, save codes, daily garden.
 5. **Tune with real players.**
 
 ## Appendix: explored alternatives

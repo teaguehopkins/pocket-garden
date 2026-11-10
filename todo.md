@@ -64,6 +64,24 @@ Art direction: **B, Clay Diorama** (chosen 2026-11-10).
 - [ ] **You:** are any plot wishes impossible or trivial?
 - [ ] **You:** try the teaching garden on someone new: do they get it without help?
 
+## Phase 4: Ship and share (done, live)
+
+Live at https://teaguehopkins.github.io/pocket-garden/ (repo: github.com/teaguehopkins/pocket-garden; every push to `main` deploys).
+
+- [x] Installable PWA: manifest, icons, service worker; plays fully offline (tested on the live site)
+- [x] "Beat my garden" links: same plot, seed, pool and rules; friends' gardens don't touch the Lane
+- [x] Share picture of the finished garden (1080×1350), via the phone's share sheet when available
+- [x] Save codes: copy your whole progress out, paste it in on another phone (Settings)
+- [x] Daily garden on the new systems, no streak
+- [ ] **You:** install it to your home screen (Share → Add to Home Screen on iPhone, or the install prompt on Android) and play once in airplane mode
+- [ ] **You:** send a garden link to a friend
+
+## Phase 5: Tune with real players (next)
+
+- [ ] Friends playtest build
+- [ ] Local stats screen (no analytics by default)
+- [ ] Retune from real results; update PRD success metrics
+
 ## Parked
 
 - **Drift Circuit (racer):** too easy; no reason to hold cards. Fix idea: hand carries over, draw 2/turn, harsher hazard combos.

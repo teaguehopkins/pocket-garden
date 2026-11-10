@@ -9,9 +9,9 @@ export default defineConfig({
     { command: 'npx vite build && npx vite preview --port 5198 --strictPort', url: 'http://localhost:5198', reuseExistingServer: true, timeout: 120_000 },
   ],
   projects: [
-    { name: 'light', use: { colorScheme: 'light' }, testIgnore: /pwa\.spec/ },
-    { name: 'dark', use: { colorScheme: 'dark' }, testIgnore: /pwa\.spec/ },
-    { name: 'pwa', use: { baseURL: 'http://localhost:5198' }, testMatch: /pwa\.spec/ },
+    { name: 'light', use: { colorScheme: 'light' }, testIgnore: /(pwa|live)\.spec/ },
+    { name: 'dark', use: { colorScheme: 'dark' }, testIgnore: /(pwa|live)\.spec/ },
+    { name: 'pwa', use: { baseURL: 'http://localhost:5198' }, testMatch: /(pwa|live)\.spec/ },
     { name: 'reduced-motion', use: { reducedMotion: 'reduce' }, testMatch: /run\.spec/ },
   ],
 });
