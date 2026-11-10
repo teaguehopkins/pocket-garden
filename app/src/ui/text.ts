@@ -23,3 +23,5 @@ export const verbTag = (v: Verb | undefined) => (v ? { grow: 'grows', spread: 's
 
 export const ruleName = (id: string) => RULES[id]?.name ?? id;
 export const ruleText = (id: string) => RULES[id]?.text ?? '';
+
+export const verbGlyph = (v: Verb | undefined) => (v ? { grow: '↑', spread: '✳', scale: '+', peak: '☀' }[v.kind] : '');

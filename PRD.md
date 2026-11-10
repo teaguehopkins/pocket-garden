@@ -126,7 +126,7 @@ See `PLAN.md` for detail.
 
 0. **Foundation (done):** app in `app/` with a pure engine matching v5 exactly, saves after every action, bot sims.
 1. **Depth and variety (in playtest):** seed bag, seasonal life, plots, tools, rules overhaul, wishes, new species, retuned targets.
-2. **Look and feel:** chosen art direction, custom SVG tiles, living board, sequenced scoring, sound and haptics.
+2. **Look and feel (built):** Clay Diorama art direction, custom SVG tiles, living board, sequenced scoring, sound and haptics.
 3. **Long-term progress:** the Lane, Almanac, achievements, onboarding, rest screen.
 4. **Ship and share:** PWA, seed links, result images, save codes, daily garden.
 5. **Tune with real players.**

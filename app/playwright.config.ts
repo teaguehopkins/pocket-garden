@@ -8,5 +8,6 @@ export default defineConfig({
   projects: [
     { name: 'light', use: { colorScheme: 'light' } },
     { name: 'dark', use: { colorScheme: 'dark' } },
+    { name: 'reduced-motion', use: { reducedMotion: 'reduce' }, testMatch: /run\.spec/ },
   ],
 });

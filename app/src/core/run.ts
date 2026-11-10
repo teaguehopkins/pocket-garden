@@ -87,7 +87,7 @@ export type RunEvent =
   | { type: 'planted'; id: string; cell: number; replaced?: string }
   | { type: 'composted' }
   | { type: 'moved'; from: number; to: number }
-  | { type: 'seasonScored'; season: number; score: number; target: number; ok: boolean; cells: number[] }
+  | { type: 'seasonScored'; season: number; score: number; target: number; ok: boolean; cells: number[]; grid: Grid; bonus: number }
   | { type: 'wish'; id: string }
   | ({ type: 'life' } & LifeChange)
   | { type: 'runEnded'; won: boolean; banked: number; stars: number | null };
@@ -288,7 +288,7 @@ function endSeason(s: RunState, A: Rng, B: Rng, ev: RunEvent[]) {
   const ok = sc >= target;
   s.results.push(sc);
   s.banked += sc;
-  ev.push({ type: 'seasonScored', season: s.season, score: sc, target, ok, cells });
+  ev.push({ type: 'seasonScored', season: s.season, score: sc, target, ok, cells, grid: structuredClone(s.grid), bonus: sc - cells.reduce((x, y) => x + y, 0) });
   if (s.features.wishes)
     s.wishes.forEach((id, k) => {
       if (!s.wishDone[k] && wishById(id).check(ctx, cells, { season: s.season, score: sc, target })) {

@@ -11,7 +11,7 @@ cd app
 npm install
 npm run dev        # dev server, also reachable from a phone on the same Wi-Fi
 npm test           # engine, parity, save/resume and Phase 1 unit tests
-npm run e2e        # Playwright: full runs at 360px, light and dark (uses system Chrome)
+npm run e2e        # Playwright: full runs at 360px in light, dark and reduced motion; drag; tally frame times (uses system Chrome)
 npm run sim -- --n 500 --bots random,greedy,planner --features p1
 npm run sim:calibrate -- --n 600 --greedy 0.3 --write   # set plot targets
 ```
@@ -23,10 +23,11 @@ npm run sim:calibrate -- --n 600 --greedy 0.3 --write   # set plot targets
 ### Layout
 
 - `src/core/`: pure game engine, no DOM. `run.ts` is the state machine (`apply(state, action) -> { state, events }`), `score.ts` the scoring, `content/` the species, rules, weather, plots and wishes tables.
-- `src/ui/`: Svelte screens. `src/persist.ts`: saves after every action.
+- `src/art/`: design tokens and the clay tile set (`Tile.svelte`). Open `/#gallery` on the dev server to see every tile.
+- `src/ui/`: Svelte screens, the scoring tally, sheets, synthesised sound. `src/persist.ts`: saves after every action.
 - `sim/`: bots (random, greedy, planner) and the balance CLI. Results are kept in `sim/results/`.
 - `test/parity/`: `extract-v5.mjs` runs `prototypes/garden.html` headless to produce fixtures; the engine must match them exactly (`npm run fixtures` regenerates).
-- `art-mocks/`: Phase 2 art-direction comparison page.
+- `art-mocks/`: the art-direction comparison page (style B, Clay Diorama, was chosen).
 
 ## Prototypes
 

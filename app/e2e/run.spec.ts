@@ -14,8 +14,15 @@ async function fresh(page: Page, features: object) {
 
 /** Take one step of a simple policy. Returns false when the run is over. */
 async function step(page: Page): Promise<boolean> {
+  const tally = page.getByTestId('tally');
+  if (await tally.isVisible()) {
+    const skip = tally.getByRole('button', { name: 'Skip' });
+    if (await skip.isVisible()) await skip.click();
+    await tally.getByRole('button', { name: /Continue|See the year/ }).click();
+    return true;
+  }
   if (await page.getByTestId('result').isVisible()) return false;
-  const opt = page.locator('.opt').first();
+  const opt = page.locator('.offer').first();
   if (await opt.isVisible()) {
     await opt.click();
     return true;
@@ -32,10 +39,11 @@ for (const [label, features] of [['v5', V5], ['phase 1', P1]] as const) {
     await fresh(page, features);
     let n = 0;
     while (n < 10) { await step(page); n++; }
-    const before = await page.getByTestId('plot').innerHTML();
+    const cells = () => page.locator('[data-cell]').evaluateAll((els) => els.map((e) => e.getAttribute('aria-label')));
+    const before = await cells();
     await page.reload();
-    expect(await page.getByTestId('plot').innerHTML()).toBe(before);
-    while ((await step(page)) && n < 60) n++;
+    expect(await cells()).toEqual(before);
+    while ((await step(page)) && n < 80) n++;
     await expect(page.getByTestId('result')).toBeVisible();
     // no horizontal scroll at 360px
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(360);

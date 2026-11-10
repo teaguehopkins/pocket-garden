@@ -37,11 +37,20 @@ All mechanics are on by default for new gardens. The Lab section at the bottom o
 - [ ] **Rules:** any never worth taking, or always taken?
 - [ ] **Readability:** can you tell at a glance what each tile does now that there are more species?
 
-## Phase 2: Look and feel (next)
+## Phase 2: Look and feel (built, needs your phone check)
 
-- [ ] **You:** pick an art direction from the mocks (A Seed Packet, B Clay Diorama, C Sun Print)
-- [ ] Design tokens and full SVG tile set
-- [ ] Living board, sequenced scoring tally, touch feel, sound and haptics, layout pass
+Art direction: **B, Clay Diorama** (chosen 2026-11-10).
+
+- [x] Design tokens (`app/src/art/tokens.css`): clay palette, season skies and accents, dusk dark mode, type, motion
+- [x] Clay SVG tiles for all 32 species plus Rock (`app/src/art/Tile.svelte`; see `/#gallery`)
+- [x] Living board: idle sway, bob, flutter, ripples and blinks; weather overlays (rain, petals, leaves, mist, dappled light, heat); sky shifts Spring to Summer to Autumn
+- [x] Scoring tally: tiles count up with rising notes, helpful rules flash with their effect, bar fills, verdict, then growth and spreading
+- [x] Touch feel: packets lift, pieces sprout when planted, drag-to-plant
+- [x] Synthesised sound and vibration, each with a toggle; reduced motion respected
+- [x] Layout: status card, rule and wish chips with detail sheets, board and shelf in the thumb zone, light and dark
+- [x] Tally holds 60fps (median and p95 16.7ms) with the CPU throttled 4x in headless Chrome
+- [ ] **You:** one full run on a real phone: does it look and feel finished? Sound and vibration pleasant? Any stutter?
+- [ ] **You:** is drag-to-plant useful, or is tap enough?
 
 ## Parked
 

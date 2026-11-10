@@ -1,0 +1,103 @@
+/* Pocket Garden design tokens: "Clay Diorama".
+   Layout: one column, max 480px; status at top, board and shelf in the thumb zone.
+   Season is set on <html data-season="0|1|2">; dark mode is dusk lighting. */
+
+@import '@fontsource/fredoka/500.css';
+@import '@fontsource/fredoka/600.css';
+@import '@fontsource/fredoka/700.css';
+@import '@fontsource/nunito/400.css';
+@import '@fontsource/nunito/700.css';
+
+:root {
+  /* type */
+  --font-display: 'Fredoka', 'Nunito', system-ui, sans-serif;
+  --font-body: 'Nunito', system-ui, sans-serif;
+  --fs-xs: 11px;
+  --fs-s: 13px;
+  --fs-m: 15px;
+  --fs-l: 19px;
+  --fs-xl: 26px;
+  --fs-xxl: 38px;
+
+  /* shape */
+  --r-s: 10px;
+  --r-m: 16px;
+  --r-l: 22px;
+  --r-pill: 999px;
+  --gap: 10px;
+
+  /* motion */
+  --t-fast: 120ms;
+  --t-med: 240ms;
+  --t-slow: 480ms;
+  --ease-pop: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --tally-step: 140ms;
+
+  /* clay palette (light: daylight) */
+  --sky: #cfe7f2;
+  --sky-2: #e4f2f8;
+  --surface: #fffaf0;
+  --surface-2: #f6eedd;
+  --ink: #2b2118;
+  --ink-dim: #6d5d4c;
+  --line: rgba(43, 33, 24, 0.14);
+  --wood: #c08446;
+  --wood-dark: #8c5a2b;
+  --wood-light: #d9a066;
+  --soil: #6b4a33;
+  --soil-dark: #533826;
+  --soil-hi: rgba(255, 255, 255, 0.07);
+  --accent: #4f9a35;
+  --accent-ink: #ffffff;
+  --good: #3f8f34;
+  --bad: #c7462d;
+  --gold: #d99a12;
+  --gold-soft: #ffe7a3;
+  --verb: #7b5cc9;
+  --badge: #fffaf0;
+  --badge-ink: #2b2118;
+  --preview: #e8ffd0;
+  --preview-neg: #ffb7a6;
+  --shadow: 0 2px 0 rgba(43, 33, 24, 0.18), 0 6px 14px rgba(43, 33, 24, 0.12);
+  --shadow-lift: 0 4px 0 rgba(43, 33, 24, 0.2), 0 14px 24px rgba(43, 33, 24, 0.18);
+  --light: rgba(255, 226, 140, 0.32);
+}
+
+/* Season skies and accents */
+:root[data-season='0'] { --sky: #d4efe2; --sky-2: #e9f7ef; --accent: #4f9a35; }
+:root[data-season='1'] { --sky: #cfe7f2; --sky-2: #e4f2f8; --accent: #e08a1e; }
+:root[data-season='2'] { --sky: #f3dcc3; --sky-2: #f9ecdc; --accent: #c4582a; }
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --surface: #2a211a; --surface-2: #33291f; --ink: #f5ecdc; --ink-dim: #bfae98; --line: rgba(245, 236, 220, 0.14);
+    --wood: #8a5a2e; --wood-dark: #5e3b1b; --wood-light: #a8723f; --soil: #3f2c1f; --soil-dark: #2f2117; --soil-hi: rgba(255, 255, 255, 0.05);
+    --good: #7ccf62; --bad: #ff8a70; --gold: #ffc94a; --gold-soft: #5a4416; --verb: #b69cff;
+    --badge: #2a211a; --badge-ink: #f5ecdc; --preview: #d8ffb8; --preview-neg: #ffb7a6;
+    --shadow: 0 2px 0 rgba(0, 0, 0, 0.35), 0 6px 14px rgba(0, 0, 0, 0.3);
+    --shadow-lift: 0 4px 0 rgba(0, 0, 0, 0.4), 0 14px 24px rgba(0, 0, 0, 0.35);
+    --light: rgba(140, 170, 255, 0.14);
+  }
+  :root:not([data-theme='light'])[data-season='0'] { --sky: #1d3530; --sky-2: #172a26; --accent: #7cc462; }
+  :root:not([data-theme='light'])[data-season='1'] { --sky: #22344d; --sky-2: #1a283b; --accent: #f2a945; }
+  :root:not([data-theme='light'])[data-season='2'] { --sky: #3a2a26; --sky-2: #2c201d; --accent: #ec8a55; }
+}
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --surface: #2a211a; --surface-2: #33291f; --ink: #f5ecdc; --ink-dim: #bfae98; --line: rgba(245, 236, 220, 0.14);
+  --wood: #8a5a2e; --wood-dark: #5e3b1b; --wood-light: #a8723f; --soil: #3f2c1f; --soil-dark: #2f2117; --soil-hi: rgba(255, 255, 255, 0.05);
+  --good: #7ccf62; --bad: #ff8a70; --gold: #ffc94a; --gold-soft: #5a4416; --verb: #b69cff;
+  --badge: #2a211a; --badge-ink: #f5ecdc; --preview: #d8ffb8; --preview-neg: #ffb7a6;
+  --shadow: 0 2px 0 rgba(0, 0, 0, 0.35), 0 6px 14px rgba(0, 0, 0, 0.3);
+  --shadow-lift: 0 4px 0 rgba(0, 0, 0, 0.4), 0 14px 24px rgba(0, 0, 0, 0.35);
+  --light: rgba(140, 170, 255, 0.14);
+}
+:root[data-theme='dark'][data-season='0'] { --sky: #1d3530; --sky-2: #172a26; --accent: #7cc462; }
+:root[data-theme='dark'][data-season='1'] { --sky: #22344d; --sky-2: #1a283b; --accent: #f2a945; }
+:root[data-theme='dark'][data-season='2'] { --sky: #3a2a26; --sky-2: #2c201d; --accent: #ec8a55; }
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --t-fast: 0ms; --t-med: 0ms; --t-slow: 0ms; --tally-step: 0ms; }
+}

@@ -1,8 +1,10 @@
-import { apply, newRun, type Action, type RunEvent, type RunState } from '../core/run';
+import { apply, newRun, type Action, type LifeChange, type RunEvent, type RunState } from '../core/run';
 import { recordRun, type Profile } from '../core/profile';
 import { PLOTS } from '../core/content/plots';
-import { P1_FEATURES, V5_FEATURES, type Features } from '../core/types';
+import { total } from '../core/score';
+import { P1_FEATURES, V5_FEATURES, type Features, type Grid } from '../core/types';
 import { loadProfile, loadRun, requestPersistence, saveProfile, saveRun, type KV } from '../persist';
+import { sfx } from './sound';
 
 const kv: KV = (() => {
   try {
@@ -28,6 +30,23 @@ function loadFeatures(): Features {
 }
 
 export type ToolMode = null | 'trowel' | 'replant';
+export type SheetKind = null | 'rules' | 'weather' | 'wishes' | 'bag' | 'guide' | 'settings' | { species: string };
+
+/** Everything the season-end tally needs to replay what happened. */
+export interface Tally {
+  season: number;
+  score: number;
+  target: number;
+  ok: boolean;
+  grid: Grid;
+  cells: number[];
+  bonus: number;
+  rules: { id: string; delta: number }[];
+  life: LifeChange[];
+  gridAfter: Grid;
+  wishes: string[];
+  ended: boolean;
+}
 
 class Game {
   run = $state.raw<RunState | null>(null);
@@ -40,6 +59,12 @@ class Game {
   newBest = $state(false);
   note = $state('');
   features = $state<Features>(loadFeatures());
+  tally = $state.raw<Tally | null>(null);
+  sheet = $state<SheetKind>(null);
+  /** bumps on every planting so the board can replay the sprout animation */
+  plantTick = $state(0);
+  /** drag-to-plant: square under the finger */
+  dragOver = $state<number | null>(null);
 
   constructor() {
     const saved = loadRun(kv);
@@ -64,17 +89,31 @@ class Game {
     this.rankUp = null;
     this.newBest = false;
     this.note = '';
+    this.tally = null;
+    this.sheet = null;
     saveRun(kv, this.run);
+  }
+
+  select(i: number | null) {
+    this.sel = i;
+    if (i !== null) sfx.select();
   }
 
   act(a: Action) {
     if (!this.run) return;
-    const { state, events } = apply(this.run, a);
+    sfx.unlock();
+    const prev = this.run;
+    const { state, events } = apply(prev, a);
     this.run = state;
     this.events = events;
     this.sel = null;
     this.tool = null;
     this.trowelFrom = null;
+    if (a.type === 'plant' || a.type === 'replant') { sfx.plant(); this.plantTick++; }
+    else if (a.type === 'draft' || a.type === 'rule') sfx.draft();
+    else if (a.type === 'compost' || a.type === 'trowel') sfx.tool();
+    const scored = events.find((e) => e.type === 'seasonScored');
+    if (scored && scored.type === 'seasonScored') this.tally = buildTally(prev, state, events, scored);
     if (events.some((e) => e.type === 'runEnded')) {
       const o = recordRun(this.profile, state);
       this.profile = o.profile;
@@ -84,6 +123,27 @@ class Game {
     }
     saveRun(kv, state);
   }
+
+  closeTally() {
+    this.tally = null;
+  }
+}
+
+function buildTally(prev: RunState, s: RunState, events: RunEvent[], e: Extract<RunEvent, { type: 'seasonScored' }>): Tally {
+  const ctx = { board: s.board, grid: e.grid, rules: new Set(prev.rules), season: e.season, weather: prev.mods[e.season], features: s.features };
+  const rules = prev.rules
+    .map((id) => {
+      const without = new Set(prev.rules.filter((r) => r !== id));
+      return { id, delta: total(ctx) - total({ ...ctx, rules: without }) };
+    })
+    .filter((r) => r.delta !== 0);
+  return {
+    season: e.season, score: e.score, target: e.target, ok: e.ok, grid: e.grid, cells: e.cells, bonus: e.bonus, rules,
+    life: events.flatMap((x) => (x.type === 'life' ? [x as LifeChange] : [])),
+    gridAfter: s.grid,
+    wishes: events.flatMap((x) => (x.type === 'wish' ? [x.id] : [])),
+    ended: events.some((x) => x.type === 'runEnded'),
+  };
 }
 
 export const game = new Game();
