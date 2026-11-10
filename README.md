@@ -18,7 +18,7 @@ npm run sim:calibrate -- --n 600 --greedy 0.3 --write   # set plot targets
 
 **Playing on a phone:** `npm run dev` prints a `Network:` URL (e.g. `http://192.168.1.20:5173`). Open it on a phone on the same network. Saves live in that browser.
 
-**Game versions:** the *Lab* section at the bottom of the screen toggles each Phase 1 mechanic for new gardens (seed bag, seasonal life, plots, tools, wishes, new species and rules). All off is exactly the v5 prototype.
+**Game versions:** the *Lab* section in Settings (gear icon) toggles each Phase 1 mechanic for new gardens (seed bag, seasonal life, plots, tools, wishes, new species and rules). All off is exactly the v5 prototype.
 
 ### Layout
 

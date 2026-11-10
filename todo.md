@@ -13,7 +13,7 @@ See `PLAN.md` for the phases. Sim numbers live in `app/sim/results/`.
 
 ## Phase 1: Depth and variety (built, needs your playtest)
 
-All mechanics are on by default for new gardens. The Lab section at the bottom of the screen toggles each one, so you can compare against v5.
+All mechanics are on by default for new gardens. The Lab section in Settings (gear icon) toggles each one, so you can compare against v5.
 
 - [x] Seed bag (18 packets, bag view)
 - [x] Seasonal life: grow, spread, grow stronger, peak; "later" marks
