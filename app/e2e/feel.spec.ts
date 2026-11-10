@@ -1,16 +1,9 @@
 import { expect, test, type Page } from '@playwright/test';
-
-const P1 = { bag: true, life: true, plots: true, tools: true, wishes: true, content: true };
+import { freshOnLane, plantFirstPlot } from './helpers';
 
 async function toPlay(page: Page) {
-  await page.goto('/');
-  await page.evaluate((f) => {
-    localStorage.clear();
-    localStorage.setItem('pg3-features', JSON.stringify(f));
-    localStorage.setItem('pg3-settings', JSON.stringify({ sound: false, haptics: false, theme: 'system' }));
-  }, P1);
-  await page.reload();
-  for (let k = 0; k < 7; k++) await page.locator('.offer').first().click();
+  await freshOnLane(page);
+  await plantFirstPlot(page);
 }
 
 test('drag a packet onto a square to plant it', async ({ page }) => {

@@ -3,7 +3,7 @@
   import { plotById } from '../core/content/plots';
   import { WEATHER } from '../core/content/weather';
   import { wishById } from '../core/content/wishes';
-  import { DRAFT_SIZE, SEASONS, type RunState } from '../core/run';
+  import { SEASONS, draftSize, type RunState } from '../core/run';
   import Tile from '../art/Tile.svelte';
   import Board from './Board.svelte';
   import { game } from './game.svelte';
@@ -33,7 +33,7 @@
 
 <div class="head">
   <h2>Choose your seeds</h2>
-  <span class="count">{run.roster.length + 1} of {DRAFT_SIZE}</span>
+  <span class="count">{run.roster.length + 1} of {draftSize(run)}</span>
 </div>
 <p class="dim">Only the seeds you choose grow this year{run.features.bag ? ': 3 packets of each go in your bag' : ''}.</p>
 {#if run.roster.length}

@@ -76,8 +76,12 @@ One run is a "garden year", targeting about 5–10 minutes in total:
 
 ## 7. Progression and replayability
 
-- **Journey mode:** random seed. Each year won ranks up and moves to the next plot (Phase 3 turns this into *the Lane*: a street of plots, each keeping a miniature of your best garden there). In v5 mode, higher ranks raise targets 3% and add constraints (rock at rank 3, shorter preview at 5, no composting at 7).
-- **Daily garden:** same seed, weather, draft and rule offers for everyone that day, so results are comparable.
+- **The Lane:** a street of 10 plots opened in order (each opens when the one before has bloomed). Each plot has 3 fixed wishes; a wish granted in a bloomed year becomes a permanent star on that plot, and the plot keeps a miniature of your best garden there. Up to 30 stars.
+- **Unlocks at fixed star totals:** play starts with 14 species and 12 rules; more arrive at 2, 3, 4 … 15 stars, so the whole pool is open by half the Lane's stars. Nothing is random.
+- **Almanac:** every species and rule you have met, with personal records (times planted, best single tile, favourite neighbour; rules taken and bloomed), plus 15 named combos to discover.
+- **Teaching garden:** the first run is a small Window Box with four scripted seed choices, three plantings a season and gentle targets. No text tutorial. It can be replayed from the Lane.
+- **Rest screen:** after each year, the result and what changed on the Lane (new stars, best garden, plots opened, new seeds and rules, combos found). Nothing starts by itself.
+- **Daily garden:** same seed, weather, plot, draft and rule offers for everyone that day, using the full pool, so results are comparable. No streak; it doesn't touch the Lane.
 - **Stars and records:** stars per year, best score per seed, lifetime totals.
 - **Future:** collection and discovery (species and rules unlocked or catalogued over time), achievements for specific combos, and a persistent garden or map that grows across runs.
 
@@ -127,7 +131,7 @@ See `PLAN.md` for detail.
 0. **Foundation (done):** app in `app/` with a pure engine matching v5 exactly, saves after every action, bot sims.
 1. **Depth and variety (in playtest):** seed bag, seasonal life, plots, tools, rules overhaul, wishes, new species, retuned targets.
 2. **Look and feel (built):** Clay Diorama art direction, custom SVG tiles, living board, sequenced scoring, sound and haptics.
-3. **Long-term progress:** the Lane, Almanac, achievements, onboarding, rest screen.
+3. **Long-term progress (built):** the Lane, Almanac, achievements, onboarding, rest screen.
 4. **Ship and share:** PWA, seed links, result images, save codes, daily garden.
 5. **Tune with real players.**
 

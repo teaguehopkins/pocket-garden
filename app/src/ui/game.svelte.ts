@@ -1,5 +1,7 @@
 import { apply, newRun, type Action, type LifeChange, type RunEvent, type RunState } from '../core/run';
-import { recordRun, type Profile } from '../core/profile';
+import { addAchievements, currentPool, markMet, recordRun, recordSeason, type LaneChange, type Profile } from '../core/profile';
+import { PLOT_WISHES, teachingRun } from '../core/content/progress';
+import { earned } from '../core/content/achievements';
 import { PLOTS } from '../core/content/plots';
 import { total } from '../core/score';
 import { P1_FEATURES, V5_FEATURES, type Features, type Grid } from '../core/types';
@@ -30,6 +32,9 @@ function loadFeatures(): Features {
 }
 
 export type ToolMode = null | 'trowel' | 'replant';
+export type View = 'lane' | 'run' | 'almanac';
+const live = (r: RunState | null) => !!r && (r.phase === 'draft' || r.phase === 'rule' || r.phase === 'play');
+export const isLive = live;
 export type SheetKind = null | 'rules' | 'weather' | 'wishes' | 'bag' | 'guide' | 'settings' | { species: string };
 
 /** Everything the season-end tally needs to replay what happened. */
@@ -46,6 +51,8 @@ export interface Tally {
   gridAfter: Grid;
   wishes: string[];
   ended: boolean;
+  /** achievements first earned this season */
+  achievements: string[];
 }
 
 class Game {
@@ -63,13 +70,19 @@ class Game {
   sheet = $state<SheetKind>(null);
   /** bumps on every planting so the board can replay the sprout animation */
   plantTick = $state(0);
+  view = $state<View>('lane');
+  /** what changed on the Lane after the last finished year */
+  lane = $state.raw<LaneChange | null>(null);
+  /** achievements earned during the current run */
+  runAchievements = $state<string[]>([]);
   /** drag-to-plant: square under the finger */
   dragOver = $state<number | null>(null);
 
   constructor() {
     const saved = loadRun(kv);
     if (saved) this.run = saved;
-    else this.start(Math.floor(Math.random() * 1e8), false);
+    if (live(saved)) this.view = 'run';
+    else if (!this.profile.tutorialDone) this.startTeaching();
     void requestPersistence();
   }
 
@@ -78,10 +91,8 @@ class Game {
     try { kv.setItem(FEATURES_KEY, JSON.stringify(f)); } catch { /* ignore */ }
   }
 
-  start(seed: number, daily: boolean) {
-    const f = $state.snapshot(this.features);
-    const plot = f.plots && PLOTS.length ? (daily ? undefined : PLOTS[(this.profile.rank - 1) % PLOTS.length].id) : undefined;
-    this.run = newRun({ seed, daily, rank: this.profile.rank, features: f, plot });
+  private begin(r: RunState) {
+    this.run = r;
     this.sel = null;
     this.tool = null;
     this.trowelFrom = null;
@@ -91,7 +102,48 @@ class Game {
     this.note = '';
     this.tally = null;
     this.sheet = null;
-    saveRun(kv, this.run);
+    this.lane = null;
+    this.runAchievements = [];
+    this.view = 'run';
+    this.profile = markMet(this.profile, r);
+    saveProfile(kv, this.profile);
+    saveRun(kv, r);
+  }
+
+  /** A garden on a Lane plot (or a plain bed when plots are switched off in the Lab). */
+  startPlot(plot: string, seed = Math.floor(Math.random() * 1e8)) {
+    const f = $state.snapshot(this.features);
+    this.begin(newRun({
+      seed, rank: this.profile.rank, features: f,
+      plot: f.plots ? plot : undefined,
+      wishes: f.plots ? PLOT_WISHES[plot] : undefined,
+      pool: f.content ? currentPool(this.profile) : undefined,
+    }));
+  }
+
+  /** Today's garden: the same for everyone, full pool, any plot. */
+  startDaily(seed = today()) {
+    this.begin(newRun({ seed, daily: true, features: $state.snapshot(this.features) }));
+  }
+
+  startTeaching() {
+    this.begin(newRun({ ...teachingRun(Math.floor(Math.random() * 1e8)), features: $state.snapshot(this.features) }));
+  }
+
+  /** Lab: a garden with no plot or pool limits. */
+  start(seed: number, daily: boolean) {
+    if (daily) return this.startDaily(seed);
+    const f = $state.snapshot(this.features);
+    this.begin(newRun({ seed, rank: this.profile.rank, features: f }));
+  }
+
+  replay() {
+    const r = this.run;
+    if (!r) return;
+    if (r.daily) this.startDaily(r.seed);
+    else if (r.plot === 'window-box') this.startTeaching();
+    else if (r.plot) this.startPlot(r.plot, r.seed);
+    else this.start(r.seed, false);
   }
 
   select(i: number | null) {
@@ -112,14 +164,28 @@ class Game {
     if (a.type === 'plant' || a.type === 'replant') { sfx.plant(); this.plantTick++; }
     else if (a.type === 'draft' || a.type === 'rule') sfx.draft();
     else if (a.type === 'compost' || a.type === 'trowel') sfx.tool();
+    let p = markMet(this.profile, state);
     const scored = events.find((e) => e.type === 'seasonScored');
-    if (scored && scored.type === 'seasonScored') this.tally = buildTally(prev, state, events, scored);
+    if (scored && scored.type === 'seasonScored') {
+      this.tally = buildTally(prev, state, events, scored);
+      p = recordSeason(p, scored.grid, scored.cells);
+      const got = addAchievements(p, earned(state, events), new Date().toISOString().slice(0, 10));
+      p = got.profile;
+      if (got.fresh.length) {
+        this.runAchievements = [...this.runAchievements, ...got.fresh];
+        this.tally = { ...this.tally, achievements: got.fresh };
+      }
+    }
     if (events.some((e) => e.type === 'runEnded')) {
-      const o = recordRun(this.profile, state);
-      this.profile = o.profile;
+      const o = recordRun(p, state);
+      p = o.profile;
       this.rankUp = o.rankUp;
       this.newBest = o.newBest;
-      saveProfile(kv, o.profile);
+      this.lane = o.lane;
+    }
+    if (p !== this.profile) {
+      this.profile = p;
+      saveProfile(kv, p);
     }
     saveRun(kv, state);
   }
@@ -143,6 +209,7 @@ function buildTally(prev: RunState, s: RunState, events: RunEvent[], e: Extract<
     gridAfter: s.grid,
     wishes: events.flatMap((x) => (x.type === 'wish' ? [x.id] : [])),
     ended: events.some((x) => x.type === 'runEnded'),
+    achievements: [],
   };
 }
 

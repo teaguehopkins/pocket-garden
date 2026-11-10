@@ -52,6 +52,18 @@ Art direction: **B, Clay Diorama** (chosen 2026-11-10).
 - [x] **You:** one full run on a real phone: feels finished; sound and vibration good
 - [x] **You:** tap is enough; drag kept as an option
 
+## Phase 3: Long-term progress (built, needs your playtest)
+
+- [x] The Lane: 10 plots opened in order, 3 fixed wishes each, best garden kept as a miniature
+- [x] Species and rules unlock at fixed star totals (14 species and 12 rules to start; all by 15 stars)
+- [x] Almanac: species, rules and 15 combos, with personal records
+- [x] Teaching garden (Window Box) on first launch; existing players skip it
+- [x] Rest screen with what changed on the Lane; no auto-start
+- [ ] **You:** does the Lane make you want to come back without feeling like a chore?
+- [ ] **You:** is the unlock pace right? (first new seeds at 2 stars)
+- [ ] **You:** are any plot wishes impossible or trivial?
+- [ ] **You:** try the teaching garden on someone new: do they get it without help?
+
 ## Parked
 
 - **Drift Circuit (racer):** too easy; no reason to hold cards. Fix idea: hand carries over, draw 2/turn, harsher hazard combos.

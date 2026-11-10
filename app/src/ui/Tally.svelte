@@ -3,6 +3,7 @@
   // rules that helped flash, the bar fills toward the target, then the garden lives.
   import { SPECIES } from '../core/content/species';
   import { wishById } from '../core/content/wishes';
+  import { achievementById } from '../core/content/achievements';
   import { SEASONS, type RunState } from '../core/run';
   import { isReal } from '../core/score';
   import Board from './Board.svelte';
@@ -88,7 +89,7 @@
       <h2>{SEASONS[tally.season]} scoring</h2>
       <div class="total"><b>{running}</b><span>/ {tally.target}</span></div>
     </header>
-    <div class="bar"><span style="transform:scaleX({fill})" class:ok={running >= tally.target}></span><i style="left:100%"></i></div>
+    <div class="bar"><span style="transform:scaleX({fill})" class:ok={running >= tally.target}></span></div>
 
     {#if stage === 'life'}
       <Board {run} grid={tally.gridAfter} changed={lifeCells} weather={false} />
@@ -112,6 +113,7 @@
           <p>{tally.score} of {tally.target} needed.</p>
         {/if}
         {#each tally.wishes as w (w)}<p class="wish">★ Wish granted: {wishById(w).text}</p>{/each}
+        {#each tally.achievements as a (a)}<p class="ach">✿ New in the Almanac: <b>{achievementById(a)?.name}</b>, {achievementById(a)?.text.toLowerCase()}</p>{/each}
       </div>
     {/if}
 
@@ -171,6 +173,7 @@
   .verdict h3 { font-size: var(--fs-l); color: var(--bad); }
   .verdict.ok h3 { color: var(--good); }
   .wish { color: var(--gold); font-weight: 700; margin-top: 4px; }
+  .ach { color: var(--verb); margin-top: 4px; }
   .life { margin: 0; padding-left: 20px; font-size: var(--fs-s); animation: rise var(--t-slow) var(--ease-out); }
   .actions { display: flex; flex-direction: column; margin-top: auto; }
   @keyframes flash { 0% { transform: scale(0.6); } 60% { transform: scale(1.12); box-shadow: 0 0 0 4px var(--gold-soft); } }

@@ -1,13 +1,14 @@
 <script lang="ts">
   import { WEATHER } from '../core/content/weather';
-  import { PER_SEASON, SEASONS, currentScore, type RunState } from '../core/run';
+  import { SEASONS, currentScore, perSeason, type RunState } from '../core/run';
   import { game } from './game.svelte';
 
   let { run }: { run: RunState } = $props();
   const season = $derived(Math.min(run.season, 2));
   const score = $derived(currentScore(run));
   const target = $derived(run.targets[season]);
-  const done = $derived(run.phase === 'play' ? run.placed % PER_SEASON : 0);
+  const per = $derived(perSeason(run));
+  const done = $derived(run.phase === 'play' ? run.placed % per : 0);
   const fill = $derived(Math.min(1, score / Math.max(1, target)));
 </script>
 
@@ -25,9 +26,9 @@
     <span style="transform:scaleX({fill})" class:ok={score >= target}></span>
   </div>
   <div class="foot">
-    <span class="dots" aria-label="{PER_SEASON - done} plantings left">
-      {#each Array(PER_SEASON) as _, k (k)}<i class:on={k < done}></i>{/each}
-      <span class="dim">{PER_SEASON - done} to plant</span>
+    <span class="dots" aria-label="{per - done} plantings left">
+      {#each Array(per) as _, k (k)}<i class:on={k < done}></i>{/each}
+      <span class="dim">{per - done} to plant</span>
     </span>
     <span class="ledger">
       {#each SEASONS as n, i (n)}

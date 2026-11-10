@@ -59,4 +59,13 @@ function defaultCentre(w: number, h: number) {
   return rows.flatMap((r) => cols.map((c) => r * w + c));
 }
 
-export const plotById = (id: string) => PLOTS.find((p) => p.id === id);
+/** The teaching garden: a small window box, outside the Lane. */
+export const TEACHING_PLOT: PlotDef = {
+  id: 'window-box',
+  name: 'Window Box',
+  twist: 'A small box to learn in. Plant things next to what they like.',
+  targets: [6, 16, 30],
+  map: ['....', '.*..', '....'],
+};
+
+export const plotById = (id: string) => PLOTS.find((p) => p.id === id) ?? (id === TEACHING_PLOT.id ? TEACHING_PLOT : undefined);

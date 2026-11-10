@@ -1,6 +1,6 @@
 // Long-term progress: the Lane of plots, star-gated unlocks and the teaching garden.
 // Everything unlocks at fixed star totals from play; nothing is random.
-import type { PlotDef } from './plots';
+import { TEACHING_PLOT } from './plots';
 import type { RunConfig } from '../run';
 
 /** Each Lane plot's three wishes. Stars are kept per wish, so different years can fill them in. */
@@ -52,14 +52,7 @@ export function poolAt(stars: number): { species: string[]; rules: string[] } {
 
 export const nextUnlock = (stars: number) => UNLOCKS.find((u) => u.stars > stars) ?? null;
 
-/** The teaching garden: a small window box, four seeds, three plantings a season, generous targets. */
-export const TEACHING_PLOT: PlotDef = {
-  id: 'window-box',
-  name: 'Window Box',
-  twist: 'A small box to learn in. Plant things next to what they like.',
-  targets: [6, 16, 30],
-  map: ['....', '.*..', '....'],
-};
+export { TEACHING_PLOT };
 
 export const teachingRun = (seed: number): Omit<RunConfig, 'features'> => ({
   seed,

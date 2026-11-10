@@ -18,3 +18,5 @@ Notes (2026-11-10):
 - Tools barely change bot results; the planner rarely finds a Trowel or Replant better than planting.
 - Wishes average about 1 of 3 for the planner; some may be too hard.
 - Rules that look strong: Centrepiece, Biodiversity, Thicket. Weak: Early Season, Tool Shed, High Canopy. These per-rule numbers are confounded by which bot picks them.
+
+Lane with the starting pool (`lane-start-pool`, 0 stars: 14 species, 12 rules, plot wishes): greedy 47%, planner 83%, gap 36. The early Lane is easier than the calibrated full-pool targets, which suits new players; it tightens as the pool grows. Revisit after playtests if the first plots feel too easy.

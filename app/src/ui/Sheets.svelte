@@ -9,9 +9,12 @@
   import Sheet from './Sheet.svelte';
   import { game } from './game.svelte';
   import { saveSettings, settings } from './settings.svelte';
+  import { favouritePair } from '../core/profile';
   import { spText, verbGlyph, verbText } from './text';
 
-  let { run }: { run: RunState } = $props();
+  let { run: maybeRun }: { run: RunState | null } = $props();
+  // Outside a run (Lane, Almanac) sheets describe things using the current game version.
+  const run = $derived(maybeRun ?? ({ features: game.features, pool: null, rules: [], wishes: [], wishDone: [], roster: [], bag: [], queue: [], mods: [], targets: [], season: 0 } as unknown as RunState));
   const close = () => (game.sheet = null);
   const kind = $derived(game.sheet);
   const bag = $derived.by(() => {
@@ -42,6 +45,15 @@
   <Sheet {title} onclose={close}>
     {#if typeof kind === 'object'}
       {@render speciesRow(kind.species)}
+      {@const rec = game.profile.species[kind.species]}
+      {@const fav = favouritePair(rec)}
+      {#if rec}
+        <dl class="recs">
+          <dt>Planted</dt><dd>{rec.planted} time{rec.planted === 1 ? '' : 's'} in finished gardens</dd>
+          <dt>Best tile</dt><dd>{rec.bestTile ? `${rec.bestTile} points` : '—'}</dd>
+          <dt>Favourite neighbour</dt><dd>{fav ? SPECIES[fav].name : '—'}</dd>
+        </dl>
+      {/if}
     {:else if kind === 'rules'}
       {#if !run.rules.length}<p class="dim">No rules yet.</p>{/if}
       {#each run.rules as id (id)}<div class="rule"><b>{RULES[id].name}</b><span>{RULES[id].text}</span></div>{/each}
@@ -82,6 +94,9 @@
 
 <style>
   h3 { font-size: var(--fs-m); margin-top: 6px; }
+  .recs { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin: 0; font-size: var(--fs-s); background: var(--surface-2); border-radius: var(--r-s); padding: 10px 12px; }
+  .recs dt { color: var(--ink-dim); }
+  .recs dd { margin: 0; font-weight: 700; }
   .sprow { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 10px; align-items: center; font-size: var(--fs-s); }
   .sprow b { font-family: var(--font-display); font-size: var(--fs-m); font-weight: 600; }
   .art { background: var(--soil); border-radius: 12px; padding: 4px; display: grid; place-items: center; }

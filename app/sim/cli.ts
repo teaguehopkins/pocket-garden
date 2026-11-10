@@ -10,6 +10,7 @@ import { fileURLToPath } from 'node:url';
 import { greedyBot, plannerBot, playRun, randomBot, type Bot } from './bots';
 import { newRun } from '../src/core/run';
 import { PLOTS } from '../src/core/content/plots';
+import { PLOT_WISHES, poolAt } from '../src/core/content/progress';
 import { P1_FEATURES, V5_FEATURES, type Features } from '../src/core/types';
 
 export interface SimArgs {
@@ -25,6 +26,8 @@ export interface SimArgs {
   seed0: number;
   /** override plot targets, e.g. for calibration: plotId -> targets */
   targets?: Record<string, number[]>;
+  /** play with the species/rule pool unlocked at this many Lane stars, and plot wishes */
+  stars?: number;
 }
 
 export interface RunRecord {
@@ -67,7 +70,8 @@ export function simChunk(a: SimArgs, botName: string, from: number, to: number):
   for (let i = from; i < to; i++) {
     const seed = seedFor(a.seed0, i) % 1e8;
     const plot = a.plots ? a.plots[i % a.plots.length] : undefined;
-    let s = newRun({ seed, rank: a.rank, features: a.features, plot });
+    const lane = a.stars !== undefined && plot ? { pool: poolAt(a.stars), wishes: PLOT_WISHES[plot] } : {};
+    let s = newRun({ seed, rank: a.rank, features: a.features, plot, ...lane });
     const t = a.targets?.[plot ?? '*'];
     if (t) s = { ...s, targets: [...t] };
     const end = playRun(bot, s, seed ^ 0x1234567);
@@ -116,7 +120,7 @@ export function report(a: SimArgs, recs: RunRecord[]): string {
   const lines: string[] = [];
   const by = (b: string, plot?: string | null) => recs.filter((r) => r.bot === b && (plot === undefined || r.plot === plot));
   const winRate = (rs: RunRecord[]) => rs.filter((r) => r.won).length / Math.max(1, rs.length);
-  lines.push(`# Sim: ${a.label}`, '', `${a.n} runs per bot · features: ${a.featureLabel} · rank ${a.rank}${a.plots ? ` · plots: ${a.plots.join(', ')}` : ''}`, '');
+  lines.push(`# Sim: ${a.label}`, '', `${a.n} runs per bot · features: ${a.featureLabel} · rank ${a.rank}${a.stars !== undefined ? ` · pool at ${a.stars} stars` : ''}${a.plots ? ` · plots: ${a.plots.join(', ')}` : ''}`, '');
   lines.push('| bot | win | clear Spring | clear Summer | Autumn p10 / median / p90 | avg stars | avg wishes |', '|---|---|---|---|---|---|---|');
   for (const b of a.bots) {
     const rs = by(b);
@@ -173,6 +177,7 @@ function parseArgs(argv: string[]): SimArgs {
     out: argv.includes('--out'),
     species: argv.includes('--species'),
     seed0: Number(get('seed', '20261110')),
+    stars: get('stars', '') ? Number(get('stars', '')) : undefined,
     targets: get('targets', '') ? { '*': get('targets', '').split('/').map(Number) } : undefined,
   };
 }
