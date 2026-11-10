@@ -2,6 +2,7 @@
 // since there are no accounts. Compressed when the browser supports it.
 import type { Profile } from './core/profile';
 import type { RunState } from './core/run';
+import type { LogEntry } from './core/stats';
 
 export interface SaveBundle {
   v: 1;
@@ -41,4 +42,23 @@ export async function importCode(code: string): Promise<SaveBundle> {
   const b = JSON.parse(new TextDecoder().decode(bytes)) as SaveBundle;
   if (b?.v !== 1 || !b.profile || b.profile.v !== 1) throw new Error('This save code is from a version this app can’t read.');
   return b;
+}
+
+// Stats codes: just the play log, for sending to whoever is tuning the game.
+
+export async function exportStats(log: LogEntry[]): Promise<string> {
+  const raw = new TextEncoder().encode(JSON.stringify({ v: 1, log }));
+  if (typeof CompressionStream === 'function') return 'PGS1.' + toB64(await pipe(raw, new CompressionStream('deflate-raw')));
+  return 'PGS0.' + toB64(raw);
+}
+
+export async function importStats(code: string): Promise<LogEntry[]> {
+  const c = code.replace(/\s+/g, '');
+  const tag = c.slice(0, 5);
+  if (tag !== 'PGS1.' && tag !== 'PGS0.') throw new Error('Not a Pocket Garden stats code.');
+  let bytes: Uint8Array = fromB64(c.slice(5));
+  if (tag === 'PGS1.') bytes = await pipe(bytes, new DecompressionStream('deflate-raw'));
+  const d = JSON.parse(new TextDecoder().decode(bytes));
+  if (d?.v !== 1 || !Array.isArray(d.log)) throw new Error('Unreadable stats code.');
+  return d.log as LogEntry[];
 }

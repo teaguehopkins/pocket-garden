@@ -53,7 +53,10 @@
 <section class="card summary">
   <div class="totals">
     <div><span class="big stars">★ {stars}</span><span class="dim"> / {laneMaxStars()} wish stars</span></div>
-    <button class="chip" onclick={() => (game.view = 'almanac')}>Almanac · {earnedCount}/{ACHIEVEMENTS.length}</button>
+    <span class="links">
+      <button class="chip" onclick={() => (game.view = 'almanac')}>Almanac · {earnedCount}/{ACHIEVEMENTS.length}</button>
+      <button class="chip" onclick={() => (game.view = 'stats')}>Stats</button>
+    </span>
   </div>
   {#if next}
     {@const need = next.stars - stars}
@@ -121,6 +124,7 @@
   .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .totals { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
   .big { font: 700 var(--fs-xl) var(--font-display); }
+  .links { display: flex; gap: 6px; }
   .next { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
   .newsp { display: inline-block; width: 28px; height: 28px; }
   .continue, .daily { border: 0; text-align: left; cursor: pointer; display: flex; gap: 8px; color: var(--ink); }

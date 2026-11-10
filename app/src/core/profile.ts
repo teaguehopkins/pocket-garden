@@ -6,6 +6,7 @@ import { SPECIES } from './content/species';
 import { MAX_RANK, type RunState } from './run';
 import { isReal } from './score';
 import type { Grid } from './types';
+import type { LogEntry } from './stats';
 
 export interface PlotRecord {
   blooms: number;
@@ -43,11 +44,13 @@ export interface Profile {
   rules: Record<string, RuleRecord>;
   /** achievement id -> date earned (YYYY-MM-DD) */
   achievements: Record<string, string>;
+  /** one entry per finished garden, newest last (capped) */
+  log: LogEntry[];
 }
 
 export const emptyProfile = (): Profile => ({
   v: 1, runs: 0, years: 0, best: 0, rank: 1, stars: 0, seedBest: {},
-  tutorialDone: false, lane: {}, species: {}, rules: {}, achievements: {},
+  tutorialDone: false, lane: {}, species: {}, rules: {}, achievements: {}, log: [],
 });
 
 const emptyPlot = (): PlotRecord => ({ blooms: 0, best: 0, bestGrid: null, wishes: [false, false, false] });

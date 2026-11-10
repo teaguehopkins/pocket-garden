@@ -9,6 +9,7 @@ import { parsePlot, PLOTS, type PlotDef } from './content/plots';
 import { WISHES, wishById } from './content/wishes';
 import { Rng, SECOND_STREAM } from './rng';
 import { cellScores, total } from './score';
+import type { RunMeta } from './stats';
 import { V5_FEATURES, type Features, type Grid, type ScoreCtx, type Tile } from './types';
 
 export const PER_SEASON = 5;
@@ -101,6 +102,8 @@ export interface RunState {
   script?: RunScript | null;
   shared?: boolean;
   poolStars?: number | null;
+  /** timing and tool use, kept by the UI for stats */
+  meta?: RunMeta;
 }
 
 export type LifeChange =

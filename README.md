@@ -14,6 +14,7 @@ npm test           # engine, parity, save/resume and Phase 1 unit tests
 npm run e2e        # Playwright: full runs at 360px in light, dark and reduced motion; drag; tally frame times (uses system Chrome)
 npm run sim -- --n 500 --bots random,greedy,planner --features p1
 npm run sim:calibrate -- --n 600 --greedy 0.3 --write   # set plot targets
+npm run stats -- ../playtest/*.txt   # combine players' "Copy my stats" codes into one report
 ```
 
 **Playing on a phone:** `npm run dev` prints a `Network:` URL (e.g. `http://192.168.1.20:5173`). Open it on a phone on the same network. Saves live in that browser.

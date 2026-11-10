@@ -4,6 +4,7 @@
   import Almanac from './Almanac.svelte';
   import Board from './Board.svelte';
   import Lane from './Lane.svelte';
+  import Stats from './Stats.svelte';
   import Draft from './Draft.svelte';
   import Result from './Result.svelte';
   import RuleChoice from './RuleChoice.svelte';
@@ -47,7 +48,7 @@
   </header>
 
   {#if !inRun}
-    {#if game.view === 'almanac'}<Almanac />{:else}<Lane />{/if}
+    {#if game.view === 'almanac'}<Almanac />{:else if game.view === 'stats'}<Stats />{:else}<Lane />{/if}
   {:else if run.phase === 'draft'}
     <Draft {run} />
   {:else if run.phase === 'rule'}

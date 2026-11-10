@@ -3,6 +3,7 @@ import { addAchievements, currentPool, laneStars, markMet, recordRun, recordSeas
 import { PLOT_WISHES, poolAt, teachingRun } from '../core/content/progress';
 import { decodeLink, type GardenLink } from '../core/link';
 import type { SaveBundle } from '../savecode';
+import { appendLog, logEntry, newMeta, tick } from '../core/stats';
 import { earned } from '../core/content/achievements';
 import { PLOTS } from '../core/content/plots';
 import { total } from '../core/score';
@@ -34,7 +35,7 @@ function loadFeatures(): Features {
 }
 
 export type ToolMode = null | 'trowel' | 'replant';
-export type View = 'lane' | 'run' | 'almanac';
+export type View = 'lane' | 'run' | 'almanac' | 'stats';
 const live = (r: RunState | null) => !!r && (r.phase === 'draft' || r.phase === 'rule' || r.phase === 'play');
 export const isLive = live;
 export type SheetKind = null | 'rules' | 'weather' | 'wishes' | 'bag' | 'guide' | 'settings' | { species: string };
@@ -85,7 +86,12 @@ class Game {
   dragOver = $state<number | null>(null);
 
   constructor() {
-    const saved = loadRun(kv);
+    let saved = loadRun(kv);
+    // Reopening the app mid-garden counts as one put-down.
+    if (live(saved)) {
+      saved = { ...saved!, meta: { ...(saved!.meta ?? newMeta(Date.now())), breaks: (saved!.meta?.breaks ?? 0) + 1, last: Date.now() } };
+      saveRun(kv, saved);
+    }
     if (saved) this.run = saved;
     this.challenge = readLinkFromUrl();
     if (live(saved)) this.view = this.challenge ? 'lane' : 'run';
@@ -99,6 +105,7 @@ class Game {
   }
 
   private begin(r: RunState) {
+    r = { ...r, meta: newMeta(Date.now()) };
     this.run = r;
     this.sel = null;
     this.tool = null;
@@ -191,7 +198,12 @@ class Game {
     if (!this.run) return;
     sfx.unlock();
     const prev = this.run;
-    const { state, events } = apply(prev, a);
+    const now = Date.now();
+    const meta = tick(prev.meta ?? newMeta(now), now);
+    if (a.type === 'compost' || a.type === 'trowel' || a.type === 'replant') meta.tools = { ...meta.tools, [a.type]: meta.tools[a.type] + 1 };
+    const res = apply(prev, a);
+    const state: RunState = { ...res.state, meta };
+    const events = res.events;
     this.run = state;
     this.events = events;
     this.sel = null;
@@ -214,7 +226,7 @@ class Game {
     }
     if (events.some((e) => e.type === 'runEnded')) {
       const o = recordRun(p, state);
-      p = o.profile;
+      p = { ...o.profile, log: appendLog(o.profile.log ?? [], logEntry(state, meta, new Date().toISOString().slice(0, 10))) };
       this.rankUp = o.rankUp;
       this.newBest = o.newBest;
       this.lane = o.lane;

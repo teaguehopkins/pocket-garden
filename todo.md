@@ -79,7 +79,8 @@ Live at https://garden.zenwombat.com/ (repo: github.com/teaguehopkins/pocket-gar
 ## Phase 5: Tune with real players (next)
 
 - [ ] Friends playtest build
-- [ ] Local stats screen (no analytics by default)
+- [x] Local stats screen (no analytics): Lane → Stats. Players tap "Copy my stats" and send you the text
+- [ ] Collect stats codes from friends into `playtest/` and run `cd app && npm run stats -- ../playtest/*.txt`
 - [ ] Retune from real results; update PRD success metrics
 
 ## Parked

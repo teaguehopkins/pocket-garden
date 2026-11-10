@@ -111,6 +111,7 @@
         {/each}
       </div>
       <button class="btn ghost" onclick={() => game.start(Math.floor(Math.random() * 1e8), false)}>Start a new garden now</button>
+      <button class="btn ghost" onclick={() => { game.sheet = null; game.view = 'stats'; }}>Your stats</button>
       <h3>Save code</h3>
       <p class="dim">Your progress lives on this device. Copy a save code somewhere safe, or paste one to move your garden to another phone.</p>
       {#if code}
