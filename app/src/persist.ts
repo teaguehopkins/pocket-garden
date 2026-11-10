@@ -44,11 +44,17 @@ export function loadRun(kv: KV): RunState | null {
 
 export function loadProfile(kv: KV): Profile {
   const p = read<Profile>(kv, PROFILE_KEY);
-  if (p && p.v === 1) return { ...emptyProfile(), ...p };
+  if (p && p.v === 1) {
+    // Older saves predate the Lane and Almanac; anyone who has played skips the teaching garden.
+    const merged = { ...emptyProfile(), ...p };
+    if (p.tutorialDone === undefined) merged.tutorialDone = (p.runs ?? 0) > 0;
+    return merged;
+  }
   // One-time migration from the v5 prototype.
   const old = read<{ runs?: number; years?: number; best?: number; rank?: number; stars?: number }>(kv, OLD_PROFILE_KEY);
   const fresh = emptyProfile();
   if (old) {
+    fresh.tutorialDone = (old.runs ?? 0) > 0;
     fresh.runs = old.runs ?? 0;
     fresh.years = old.years ?? 0;
     fresh.best = old.best ?? 0;

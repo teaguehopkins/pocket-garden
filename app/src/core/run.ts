@@ -5,7 +5,7 @@ import { rectBoard, adj, type Board } from './board';
 import { p1Pool, SPECIES, v5Pool } from './content/species';
 import { p1Rules, v5Rules } from './content/rules';
 import { weatherIds } from './content/weather';
-import { parsePlot, PLOTS } from './content/plots';
+import { parsePlot, PLOTS, type PlotDef } from './content/plots';
 import { WISHES, wishById } from './content/wishes';
 import { Rng, SECOND_STREAM } from './rng';
 import { cellScores, total } from './score';
@@ -28,6 +28,32 @@ export interface RunConfig {
   features?: Features;
   /** plot id when features.plots */
   plot?: string;
+  /** a plot not in the Lane (the teaching garden) */
+  plotDef?: PlotDef;
+  /** species and rules available (unlocks); default: the whole pool */
+  pool?: Pool;
+  /** fixed wishes (each Lane plot has its own) */
+  wishes?: string[];
+  /** plantings per season (default 5) */
+  per?: number;
+  /** species drafted (default 6) */
+  draftSize?: number;
+  /** fixed offers, weather and targets for the teaching garden */
+  script?: RunScript;
+}
+
+export interface Pool {
+  species: string[];
+  rules: string[];
+}
+
+export interface RunScript {
+  /** draft offers by pick number */
+  offers?: string[][];
+  /** rule offers by season */
+  ruleOffers?: string[][];
+  mods?: string[];
+  targets?: number[];
 }
 
 export interface RunState {
@@ -65,6 +91,10 @@ export interface RunState {
   wishDone: boolean[];
   /** what changed at the last season end (features.life), for display */
   changes: LifeChange[];
+  pool?: Pool | null;
+  per?: number;
+  draftSize?: number;
+  script?: RunScript | null;
 }
 
 export type LifeChange =
@@ -94,8 +124,19 @@ export type RunEvent =
 
 const rankTargets = (r: number) => V5_BASE.map((t) => Math.round(t * (1 + 0.03 * (r - 1))));
 
-export const speciesPool = (s: Pick<RunState, 'features'>) => (s.features.content ? p1Pool() : v5Pool());
-export const rulePool = (s: Pick<RunState, 'features'>) => (s.features.content ? p1Rules() : v5Rules());
+export const speciesPool = (s: Pick<RunState, 'features' | 'pool'>) => s.pool?.species ?? (s.features.content ? p1Pool() : v5Pool());
+export const rulePool = (s: Pick<RunState, 'features' | 'pool'>) => s.pool?.rules ?? (s.features.content ? p1Rules() : v5Rules());
+export const perSeason = (s: Pick<RunState, 'per'>) => s.per ?? PER_SEASON;
+export const draftSize = (s: Pick<RunState, 'draftSize'>) => s.draftSize ?? DRAFT_SIZE;
+
+function dealDraft(s: RunState, B: Rng) {
+  const scripted = s.script?.offers?.[s.roster.length]?.filter((k) => !s.roster.includes(k));
+  s.offer = scripted?.length ? scripted : B.pick(speciesPool(s).filter((k) => !s.roster.includes(k)), 3);
+}
+function dealRules(s: RunState, B: Rng) {
+  const scripted = s.script?.ruleOffers?.[s.season]?.filter((k) => !s.rules.includes(k));
+  s.ruleOffer = scripted?.length ? scripted : B.pick(rulePool(s).filter((k) => !s.rules.includes(k)), 3);
+}
 
 export function shelfN(s: RunState) {
   return s.rules.includes('shelf') ? 4 : 3;
@@ -119,13 +160,13 @@ export function newRun(cfg: RunConfig): RunState {
   const daily = !!cfg.daily;
   const rank = daily ? 1 : cfg.rank ?? 1;
   const A = new Rng(cfg.seed), B = new Rng(cfg.seed ^ SECOND_STREAM);
-  const mods = B.pick(weatherIds(), 3);
+  const mods = cfg.script?.mods ?? B.pick(weatherIds(), 3);
   let board = rectBoard(4, 4);
   let grid: Grid = Array(16).fill(null);
   let targets = daily ? [...V5_BASE] : rankTargets(rank);
   let plot: string | null = null;
   if (features.plots) {
-    const def = PLOTS.find((p) => p.id === cfg.plot) ?? PLOTS[B.int(PLOTS.length)];
+    const def = cfg.plotDef ?? PLOTS.find((p) => p.id === cfg.plot) ?? PLOTS[B.int(PLOTS.length)];
     ({ board, grid } = parsePlot(def));
     targets = [...def.targets];
     plot = def.id;
@@ -137,13 +178,15 @@ export function newRun(cfg: RunConfig): RunState {
     plot, board, targets, mods, roster: [], offer: [], ruleOffer: [], rules: [], queue: [], bag: [],
     grid, season: 0, placed: 0, results: [], banked: 0, phase: 'draft', last: -1, rerolls: 0, stars: null,
     wishes: [], wishDone: [], changes: [],
+    pool: cfg.pool ?? null, per: cfg.per, draftSize: cfg.draftSize, script: cfg.script ?? null,
   };
+  if (cfg.script?.targets) s.targets = [...cfg.script.targets];
   withRng(s, (_A, B) => {
     if (features.wishes) {
-      s.wishes = B.pick(WISHES.map((w) => w.id), 3);
+      s.wishes = cfg.wishes ? [...cfg.wishes] : B.pick(WISHES.map((w) => w.id), 3);
       s.wishDone = s.wishes.map(() => false);
     }
-    s.offer = B.pick(speciesPool(s).filter((k) => !s.roster.includes(k)), 3);
+    dealDraft(s, B);
   });
   return s;
 }
@@ -170,7 +213,7 @@ export const emptySquares = (s: RunState) => s.grid.flatMap((t, i) => (!t && s.b
 export const movable = (s: RunState, i: number) => !!s.grid[i] && !s.grid[i]!.f && SPECIES[s.grid[i]!.s].group !== 'none';
 
 export function plantingsLeft(s: RunState) {
-  return PER_SEASON - (s.placed % PER_SEASON);
+  return perSeason(s) - (s.placed % perSeason(s));
 }
 
 /** Change to this season's score if the packet in `slot` were planted on `cell` (Replant if occupied). */
@@ -221,12 +264,12 @@ export function apply(prev: RunState, a: Action): { state: RunState; events: Run
       case 'draft': {
         s.roster.push(a.id);
         ev.push({ type: 'drafted', id: a.id });
-        if (s.roster.length < DRAFT_SIZE) s.offer = B.pick(speciesPool(s).filter((k) => !s.roster.includes(k)), 3);
+        if (s.roster.length < draftSize(s)) dealDraft(s, B);
         else {
           s.offer = [];
           if (s.features.bag) s.bag = s.roster.flatMap((k) => Array(BAG_COPIES).fill(k));
           s.phase = 'rule';
-          s.ruleOffer = B.pick(rulePool(s), 3);
+          dealRules(s, B);
         }
         break;
       }
@@ -272,7 +315,7 @@ export function apply(prev: RunState, a: Action): { state: RunState; events: Run
         s.placed++;
         s.queue.splice(a.slot, 1);
         fillQueue(s, A);
-        if (s.placed % PER_SEASON === 0) endSeason(s, A, B, ev);
+        if (s.placed % perSeason(s) === 0) endSeason(s, A, B, ev);
         break;
       }
     }
@@ -308,7 +351,7 @@ function endSeason(s: RunState, A: Rng, B: Rng, ev: RunEvent[]) {
   }
   s.season++;
   s.phase = 'rule';
-  s.ruleOffer = B.pick(rulePool(s).filter((k) => !s.rules.includes(k)), 3);
+  dealRules(s, B);
 }
 
 function marginStars(s: RunState) {

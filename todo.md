@@ -37,7 +37,7 @@ All mechanics are on by default for new gardens. The Lab section in Settings (ge
 - [ ] **Rules:** any never worth taking, or always taken?
 - [ ] **Readability:** can you tell at a glance what each tile does now that there are more species?
 
-## Phase 2: Look and feel (built, needs your phone check)
+## Phase 2: Look and feel (done)
 
 Art direction: **B, Clay Diorama** (chosen 2026-11-10).
 
@@ -49,8 +49,8 @@ Art direction: **B, Clay Diorama** (chosen 2026-11-10).
 - [x] Synthesised sound and vibration, each with a toggle; reduced motion respected
 - [x] Layout: status card, rule and wish chips with detail sheets, board and shelf in the thumb zone, light and dark
 - [x] Tally holds 60fps (median and p95 16.7ms) with the CPU throttled 4x in headless Chrome
-- [ ] **You:** one full run on a real phone: does it look and feel finished? Sound and vibration pleasant? Any stutter?
-- [ ] **You:** is drag-to-plant useful, or is tap enough?
+- [x] **You:** one full run on a real phone: feels finished; sound and vibration good
+- [x] **You:** tap is enough; drag kept as an option
 
 ## Parked
 
