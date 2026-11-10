@@ -89,7 +89,7 @@ export type RunEvent =
   | { type: 'moved'; from: number; to: number }
   | { type: 'seasonScored'; season: number; score: number; target: number; ok: boolean; cells: number[] }
   | { type: 'wish'; id: string }
-  | LifeChange
+  | ({ type: 'life' } & LifeChange)
   | { type: 'runEnded'; won: boolean; banked: number; stars: number | null };
 
 const rankTargets = (r: number) => V5_BASE.map((t) => Math.round(t * (1 + 0.03 * (r - 1))));
@@ -304,7 +304,7 @@ function endSeason(s: RunState, A: Rng, B: Rng, ev: RunEvent[]) {
   }
   if (s.features.life) {
     s.changes = seasonalLife(s, A);
-    ev.push(...s.changes);
+    ev.push(...s.changes.map((c) => ({ type: 'life' as const, ...c })));
   }
   s.season++;
   s.phase = 'rule';
